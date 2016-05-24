@@ -1,0 +1,52 @@
+<html>
+<head>
+<title>Network Configuration</title>
+</head>
+
+<body>
+<h1>Network Configuration</h1>
+
+<div class="interface">
+<div class="header">eth0</div>
+<div class="configuration">
+
+<div class="header">inet</div>
+<form>
+<div class="options">
+<span class="title">Type:</span>
+<span class="form">
+<select name="type">
+<option selected>dhcp</option>
+<option>static</option>
+</select>
+</span>
+
+<div class="options" id="eth0_inet_static">
+<table border=0>
+<!-- <tr><th>MAC Address:</th><td><input type="hwaddress"></input></td></tr> -->
+<tr><th>Address:</th><td><input type="text" name="address"></input></td></tr>
+<tr><th>Netmask:</th><td><input type="text" name="netmask"></input></td></tr>
+<!-- NEVER USE <tr><th>Broadcast:</th><td><input type="text" name="broadcast"></input></td></tr> -->
+<tr><th>MTU:</th><td><input type="text" name="mtu"></input></td></tr>
+<!-- <tr><th>End Point:</th><td><input type="text" name="pointopoint"></input></td></tr> -->
+<tr><th>Gateway:</th><td><input type="text" name="gateway"></input></td></tr>
+<tr><th>Gateway Metric:</th><td><input type="text" name="metric"></input></td></tr>
+<tr><th>Nameserver:</th><td><input type="text" name="nameserver"></input></td></tr>
+<tr><th>Scope:</th><td><select name="scope"><option>global</option><option>link</option><option>host</option></select></td></tr>
+</table>
+</div>
+
+<div class="options" id="eth0_inet_dhcp">
+<table border=0>
+<!-- <tr><th>MAC Address:</th><td><input type="hwaddress"></input></td></tr> -->
+<tr><th>Hostname:</th><td><input type="text" name="hostname"></input></td></tr>
+</table>
+</div>
+
+</div>
+</form>
+</div>
+</div>
+
+</body>
+</html>
