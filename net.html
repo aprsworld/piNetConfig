@@ -1,52 +1,96 @@
 <html>
 <head>
 <title>Network Configuration</title>
+<link rel="stylesheet" href="res/jquery-ui-1.11.4.custom/jquery-ui.min.css" />
+<script src="res/jquery-2.2.4.min.js"></script>
+<script src="res/jquery-ui-1.11.4.custom/jquery-ui.min.js"></script>
+<script>
+
+</script>
 </head>
 
 <body>
 <h1>Network Configuration</h1>
 
-<div class="interface">
-<div class="header">eth0</div>
-<div class="configuration">
-
-<div class="header">inet</div>
-<form>
-<div class="options">
-<span class="title">Type:</span>
-<span class="form">
-<select name="type">
-<option selected>dhcp</option>
-<option>static</option>
-</select>
-</span>
-
-<div class="options" id="eth0_inet_static">
-<table border=0>
-<!-- <tr><th>MAC Address:</th><td><input type="hwaddress"></input></td></tr> -->
-<tr><th>Address:</th><td><input type="text" name="address"></input></td></tr>
-<tr><th>Netmask:</th><td><input type="text" name="netmask"></input></td></tr>
-<!-- NEVER USE <tr><th>Broadcast:</th><td><input type="text" name="broadcast"></input></td></tr> -->
-<tr><th>MTU:</th><td><input type="text" name="mtu"></input></td></tr>
-<!-- <tr><th>End Point:</th><td><input type="text" name="pointopoint"></input></td></tr> -->
-<tr><th>Gateway:</th><td><input type="text" name="gateway"></input></td></tr>
-<!-- <tr><th>Gateway Metric:</th><td><input type="text" name="metric"></input></td></tr> -->
-<tr><th>Nameserver:</th><td><input type="text" name="nameserver"></input></td></tr>
-<!-- <tr><th>Scope:</th><td><select name="scope"><option>global</option><option>link</option><option>host</option></select></td></tr> -->
-</table>
+<h2>Interfaces</h2>
+<div id="interfaces">
+<ul></ul>
 </div>
 
-<div class="options" id="eth0_inet_dhcp">
-<table border=0>
-<!-- <tr><th>MAC Address:</th><td><input type="hwaddress"></input></td></tr> -->
-<tr><th>Hostname:</th><td><input type="text" name="hostname"></input></td></tr>
-</table>
+<script>
+$.ajax("current_settings.php", {
+	context:	this,
+	cache:		false,
+	dataType:	'json',
+	ifModified:	true,
+	headers:	{}
+}).done(function (data, status, XHR) {
+	for (var iface in data) {
+		$('#interfaces ul').append('<li><a href="#interface-' + iface + '">' + iface + '</a></li>');
+		var $ifconfig = $('<div class="interface"></div>');
+		$ifconfig.attr('id', 'interface-' + iface);
+		$ifconfig_aliases = $('<div class="interface-aliases"></div>');
+		$ifconfig.append($ifconfig_aliases);
+		for (var alias in data[iface]) {
+			$alconfig = $('<div class="alias"></div>');
+			$alconfig.attr('id', 'interface-' + iface + '-' + alias);
+			$alconfig.html('\
+	<span class="title">Configuration Method:</span>\
+	<span class="form">\
+		<select class="configure-method" name="method">\
+			<option value="dhcp">DHCP</option>\
+			<option value="manual">Manual</option>\
+		</select>\
+	</span>\
+	<hr />\
+	<div class="method method-dhcp">\
+		<table border=0>\
+		<!-- <tr><th>MAC Address:</th><td><input type="hwaddress"></input></td></tr> -->\
+		<tr><th>Hostname:</th><td><input type="text" name="hostname"></input></td></tr>\
+		</table>\
+	</div>\
+	<div class="method method-manual">\
+		<table border=0>\
+		<!-- <tr><th>MAC Address:</th><td><input type="hwaddress"></input></td></tr> -->\
+		<tr><th>Address:</th><td><input type="text" name="address"></input></td></tr>\
+		<tr><th>Netmask:</th><td><input type="text" name="netmask"></input></td></tr>\
+		<!-- NEVER USE <tr><th>Broadcast:</th><td><input type="text" name="broadcast"></input></td></tr> -->\
+		<tr><th>MTU:</th><td><input type="text" name="mtu"></input></td></tr>\
+		<!-- <tr><th>End Point:</th><td><input type="text" name="pointopoint"></input></td></tr> -->\
+		<tr><th>Gateway:</th><td><input type="text" name="gateway"></input></td></tr>\
+		<!-- <tr><th>Gateway Metric:</th><td><input type="text" name="metric"></input></td></tr> -->\
+		<tr><th>Nameserver:</th><td><input type="text" name="nameserver"></input></td></tr>\
+		<!-- <tr><th>Scope:</th><td><select name="scope"><option>global</option><option>link</option><option>host</option></select></td></tr> -->\
+		</table>\
+	</div>');
+	
+	$alconfig.find(".configure-method").selectmenu({
+		width:	128,
+		create: function(event, ui) {
+			$(this).parents(".interface").children(".method").hide();
+			$(this).parents(".interface").children(".method-" + $(this).val()).show();
+		},
+		change:	function(event, ui) {
+			$(this).parents(".interface").children(".method").hide();
+			$(this).parents(".interface").children(".method-" + ui.item.value).show();
+		}
+	});
+			$ifconfig_aliases.append('<h3>' + alias + '</h3>');
+			$ifconfig_aliases.append($alconfig);
+		}
+		$('#interfaces').append($ifconfig);
+		$ifconfig_aliases.accordion();
+	}
+	$("#interfaces").tabs();
+}).fail(function (XHR, status, error) {
+	alert("Failed to get configuration information!");
+});
+</script>
+<!--
+<div id="interface-lo" class="interface">
+	<p>Nothing to configure.</p>
 </div>
-
-</div>
-</form>
-</div>
-</div>
-
+<div id="interface-eth0" class="interface">
+-->
 </body>
 </html>

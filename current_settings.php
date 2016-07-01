@@ -78,17 +78,26 @@ function ip_parse($s) {
 		$line0 = preg_replace("/^[0-9]+: +/", "", $lines[0]);
 		$split0 = split("[ ]+", $line0);
 		$interface = $split0[0];
-		if (!array_key_exists($interface, $ret)) {
-			$ret[$interface] = Array();
+		$alias = $split0[sizeof($split0)-1];
+		if ($alias == "") {
+			$alias = $interface;
 		}
 		$family = $split0[1];
-		$ret[$interface][$family] = Array();
 		$address = $split0[2];
-		$ret[$interface][$family]["address"] = $address;
+		$alias_config = Array();
+		$alias_config[$family] = Array();
+		$alias_config[$family]["address"] = $address;
 		for ($i = 3; $i+1 < sizeof($split0); $i += 2) {
 			$key = $split0[$i];
 			$value = $split0[$i+1];
-			$ret[$interface][$family][$key] = $value;
+			$alias_config[$family][$key] = $value;
+		}
+		$interface_config = Array();
+		$interface_config[$alias] = $alias_config;
+		if ($ret[$interface] == NULL) {
+			$ret[$interface] = $interface_config;
+		} else {
+			$ret[$interface] = array_merge_recursive($interface_config, $ret[$interface]);
 		}
 	}
 
@@ -96,7 +105,9 @@ function ip_parse($s) {
 }
 
 	$iwconfig_output = shell_exec("/sbin/iwconfig 2> /dev/null");
-	if ($iwconfig_output != NULL) {
+	if ($iwconfig_output == NULL) {
+		$iwconfig = Array();
+	} else {
 		$iwconfig = iwconfig_parse($iwconfig_output);
 	}
 	
