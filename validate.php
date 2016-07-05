@@ -193,6 +193,8 @@ function validate_ip4($ip_s, $gateway_s, $netmask_s) {
 	return true;
 }
 
-echo json_encode(validate_ip4("192.168.0.1", "192.168.4.254", "255.255.252.0"));
+function parse_ip4_address2string($a) {
+	return '' . $a[0] . '.' . $a[1] . '.' . $a[2] . '.' . $a[3];
+}
 
 ?>

@@ -30,6 +30,6 @@ function interfaces_reserved() {
 	return $interfaces;
 }
 
-echo json_encode(interfaces_reserved());
+//echo json_encode(interfaces_reserved());
 
 ?>

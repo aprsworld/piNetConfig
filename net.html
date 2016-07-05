@@ -30,8 +30,21 @@ $.ajax("current_settings.php", {
 		var $ifconfig = $('<div class="interface"></div>');
 		$ifconfig.attr('id', 'interface-' + iface);
 		$ifconfig_aliases = $('<div class="interface-aliases"></div>');
+		if (data[iface].system) {
+			$ifconfig.append('<div><b style="color: #F00;">System Configured!</b></div>');
+		}
+		$ifconfig.append('\
+	<span><table border=0>\
+	<tr><th>MAC Address:</th><td><input type="text" name="hwaddress" value="'+data[iface].hwaddress+'"></input></td></tr>\
+	<tr><th>MTU:</th><td><input type="text" name="mtu" value="'+data[iface].mtu+'"></input></td></tr>\
+	</table><br /></span>\
+		');
 		$ifconfig.append($ifconfig_aliases);
 		for (var alias in data[iface]) {
+			var inet = data[iface][alias]['inet'];
+			if (!inet) {
+				continue;
+			}
 			$alconfig = $('<div class="alias"></div>');
 			$alconfig.attr('id', 'interface-' + iface + '-' + alias);
 			$alconfig.html('\
@@ -39,41 +52,24 @@ $.ajax("current_settings.php", {
 	<span class="form">\
 		<select class="configure-method" name="method">\
 			<option value="dhcp">DHCP</option>\
-			<option value="manual">Manual</option>\
+			<option value="static">Static</option>\
 		</select>\
 	</span>\
-	<hr />\
-	<div class="method method-dhcp">\
-		<table border=0>\
-		<!-- <tr><th>MAC Address:</th><td><input type="hwaddress"></input></td></tr> -->\
-		<tr><th>Hostname:</th><td><input type="text" name="hostname"></input></td></tr>\
-		</table>\
-	</div>\
 	<div class="method method-manual">\
 		<table border=0>\
-		<!-- <tr><th>MAC Address:</th><td><input type="hwaddress"></input></td></tr> -->\
-		<tr><th>Address:</th><td><input type="text" name="address"></input></td></tr>\
-		<tr><th>Netmask:</th><td><input type="text" name="netmask"></input></td></tr>\
-		<!-- NEVER USE <tr><th>Broadcast:</th><td><input type="text" name="broadcast"></input></td></tr> -->\
-		<tr><th>MTU:</th><td><input type="text" name="mtu"></input></td></tr>\
+		<!-- <tr><th>Hostname:</th><td><input type="text" name="hostname"></input></td></tr> -->\
+		<tr><th>Address:</th><td><input type="text" name="address" value="'+inet.address+'"></input></td></tr>\
+		<tr><th>Netmask:</th><td><input type="text" name="netmask" value="'+inet.netmask+'"></input></td></tr>\
 		<!-- <tr><th>End Point:</th><td><input type="text" name="pointopoint"></input></td></tr> -->\
-		<tr><th>Gateway:</th><td><input type="text" name="gateway"></input></td></tr>\
-		<!-- <tr><th>Gateway Metric:</th><td><input type="text" name="metric"></input></td></tr> -->\
-		<tr><th>Nameserver:</th><td><input type="text" name="nameserver"></input></td></tr>\
+		<tr><th>Gateway:</th><td><input type="text" name="gateway" value="'+inet.gateway+'"></input></td></tr>\
+		<tr><th>Gateway Metric:</th><td><input type="text" name="metric" value="'+inet.metric+'"></input></td></tr>\
+		<tr><th>Nameserver:</th><td><input type="text" name="nameserver"></input></td><td></td></tr>\
 		<!-- <tr><th>Scope:</th><td><select name="scope"><option>global</option><option>link</option><option>host</option></select></td></tr> -->\
 		</table>\
 	</div>');
 	
 	$alconfig.find(".configure-method").selectmenu({
 		width:	128,
-		create: function(event, ui) {
-			$(this).parents(".interface").children(".method").hide();
-			$(this).parents(".interface").children(".method-" + $(this).val()).show();
-		},
-		change:	function(event, ui) {
-			$(this).parents(".interface").children(".method").hide();
-			$(this).parents(".interface").children(".method-" + ui.item.value).show();
-		}
 	});
 			$ifconfig_aliases.append('<h3>' + alias + '</h3>');
 			$ifconfig_aliases.append($alconfig);

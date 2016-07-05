@@ -1,4 +1,6 @@
 <?php
+require('validate.php');
+require('netconfig.php');
 
 // Parse iwconfig output
 function iwconfig_parse($s) {
@@ -59,7 +61,69 @@ function iwconfig_parse($s) {
 	return $ret;
 };
 
+
 // ip parse
+function ip_parse_link($s) {
+	$interfaces_string = split("\n", $s);
+	$ret = Array();
+
+	// Parse each interface
+	foreach ($interfaces_string as $interface_string) {
+		// Empty interface
+		if (trim($interface_string) == "") {
+			continue;
+		}
+
+		// Split into lines
+		$lines = split("\\\\", $interface_string);
+
+		// Parse line 0
+		$line0 = preg_replace("/^[0-9]+: +/", "", $lines[0]);
+		$split0 = split("[ ]+", $line0);
+		$interface = rtrim($split0[0], ":");
+		$flags = $split0[1];
+		$interface_config = Array();
+		for ($i = 2; $i+1 < sizeof($split0); $i += 2) {
+			$key = $split0[$i];
+			$value = $split0[$i+1];
+			$interface_config[$key] = $value;
+		}
+
+		// Parse line 2
+		$split1 = split("[ ]+", $lines[1]);
+		$interface_config["hwaddress"] = $split1[2];
+
+		$ret[$interface] = $interface_config;
+	}
+
+	return $ret;
+}
+
+function ip_parse_route($s) {
+	$routes_string = split("\n", $s);
+	$ret = Array();
+
+	// Parse each route
+	foreach ($routes_string as $route_string) {
+		$split = split("[ ]+", $route_string);
+		if ($split[0] != "default") {
+			continue;
+		}
+		$alias = $split[4];
+		$interface = split("[:.]", $alias, 2)[0];
+		$metric = $split[8];
+		$gateway = $split[2];
+		$ret[$interface] = Array();
+		$ret[$interface][$alias] = Array();
+		// TODO: inet6
+		$ret[$interface][$alias]['inet'] = Array();
+		$ret[$interface][$alias]['inet']['gateway'] = $gateway;
+		$ret[$interface][$alias]['inet']['metric'] = $metric;
+	}
+
+	return $ret;
+}
+
 function ip_parse($s) {
 	$interfaces_string = split("\n", $s);
 	$ret = Array();
@@ -83,10 +147,13 @@ function ip_parse($s) {
 			$alias = $interface;
 		}
 		$family = $split0[1];
-		$address = $split0[2];
+		$net = split("/", $split0[2], 2);
+		$address = $net[0];
+		$netmask = parse_ip4_address2string(parse_ip4_netsize2mask($net[1]));
 		$alias_config = Array();
 		$alias_config[$family] = Array();
 		$alias_config[$family]["address"] = $address;
+		$alias_config[$family]["netmask"] = $netmask;
 		for ($i = 3; $i+1 < sizeof($split0); $i += 2) {
 			$key = $split0[$i];
 			$value = $split0[$i+1];
@@ -104,12 +171,32 @@ function ip_parse($s) {
 	return $ret;
 }
 
+	$reserved_list = interfaces_reserved();
+	$reserved = Array();
+	for ($i = 0; $i < sizeof($reserved_list); $i++) {
+		$if = $reserved_list[$i];
+		$reserved[$if] = Array();
+		$reserved[$if]['system'] = true;
+	}
+
 	$iwconfig_output = shell_exec("/sbin/iwconfig 2> /dev/null");
 	if ($iwconfig_output == NULL) {
 		$iwconfig = Array();
 	} else {
 		$iwconfig = iwconfig_parse($iwconfig_output);
 	}
+
+	$ip_output = shell_exec("/sbin/ip -o link 2> /dev/null");
+	if ($ip_output == NULL) {
+		exit(-1);
+	}
+	$ip_link = ip_parse_link($ip_output);
+
+	$ip_output = shell_exec("/sbin/ip -o route 2> /dev/null");
+	if ($ip_output == NULL) {
+		exit(-1);
+	}
+	$ip_route = ip_parse_route($ip_output);
 	
 	$ip_output = shell_exec("/sbin/ip -o addr 2> /dev/null");
 	if ($ip_output == NULL) {
@@ -117,6 +204,6 @@ function ip_parse($s) {
 	}
 	$ip = ip_parse($ip_output);
 
-	$config = array_merge_recursive($ip, $iwconfig);
+	$config = array_merge_recursive($reserved, $ip_link, $ip_route, $ip, $iwconfig);
 	echo json_encode($config);
 ?>
