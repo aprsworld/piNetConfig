@@ -190,19 +190,19 @@ function ip_parse($s) {
 		$iwconfig = iwconfig_parse($iwconfig_output);
 	}
 
-	$ip_output = shell_exec("/sbin/ip -o link 2> /dev/null");
+	$ip_output = shell_exec("/sbin/ip -o -f inet link 2> /dev/null");
 	if ($ip_output == NULL) {
 		exit(-1);
 	}
 	$ip_link = ip_parse_link($ip_output);
 
-	$ip_output = shell_exec("/sbin/ip -o route 2> /dev/null");
+	$ip_output = shell_exec("/sbin/ip -o -f inet route 2> /dev/null");
 	if ($ip_output == NULL) {
 		exit(-1);
 	}
 	$ip_route = ip_parse_route($ip_output);
 	
-	$ip_output = shell_exec("/sbin/ip -o addr 2> /dev/null");
+	$ip_output = shell_exec("/sbin/ip -o -f inet addr 2> /dev/null");
 	if ($ip_output == NULL) {
 		exit(-1);
 	}
