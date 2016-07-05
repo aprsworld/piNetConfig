@@ -142,6 +142,10 @@ function ip_parse($s) {
 		$line0 = preg_replace("/^[0-9]+: +/", "", $lines[0]);
 		$split0 = split("[ ]+", $line0);
 		$interface = $split0[0];
+		if ($interface[strlen($interface)-1] ==  ":") {
+			// Link info... skip
+			continue;
+		}
 		$alias = $split0[sizeof($split0)-1];
 		if ($alias == "") {
 			$alias = $interface;
