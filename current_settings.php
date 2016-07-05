@@ -111,14 +111,14 @@ function ip_parse_route($s) {
 		}
 		$alias = $split[4];
 		$interface = split("[:.]", $alias, 2)[0];
-		$metric = $split[8];
+		// XXX: $metric = $split[8];
 		$gateway = $split[2];
 		$ret[$interface] = Array();
 		$ret[$interface][$alias] = Array();
 		// TODO: inet6
 		$ret[$interface][$alias]['inet'] = Array();
 		$ret[$interface][$alias]['inet']['gateway'] = $gateway;
-		$ret[$interface][$alias]['inet']['metric'] = $metric;
+		//$ret[$interface][$alias]['inet']['metric'] = $metric;
 	}
 
 	return $ret;
