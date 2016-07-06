@@ -33,6 +33,8 @@ $.ajax("current_settings.php", {
 	ifModified:	true,
 	headers:	{}
 }).done(function (data, status, XHR) {
+	var config = data.config;
+	delete data.config;
 	for (var iface in data) {
 		var $li = $('<li><a href="#interface-' + iface + '">' + iface + '</a></li>');
 		$('#interfaces ul').append($li);
