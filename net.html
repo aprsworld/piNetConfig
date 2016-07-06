@@ -12,14 +12,12 @@
 </head>
 
 <body>
-<h1>Network Configuration</h1>
+<h1 style="float: left;">Network Configuration</h1>
 
-<br />
 <div style="float: right;" id="buttons">
 <input type="button" name="reset" value="Reset"></input>
 <input type="button" name="update" value="Update"></input>
 </div>
-<br />
 
 <div style="clear: both;" id="interfaces">
 <ul></ul>
@@ -70,7 +68,7 @@ $.ajax("current_settings.php", {
 		<tr><th>Netmask:</th><td><input type="text" name="netmask" value="'+inet.netmask+'"></input></td></tr>\
 		<!-- <tr><th>End Point:</th><td><input type="text" name="pointopoint"></input></td></tr> -->\
 		<tr><th>Gateway:</th><td><input type="text" name="gateway" value="'+inet.gateway+'"></input></td></tr>\
-		<!-- <tr><th>Gateway Metric:</th><td><input type="text" name="metric" value="'+inet.metric+'"></input></td></tr> -->\
+		<!-- <tr><th>GW Metric:</th><td><input type="text" name="metric" value="'+inet.metric+'"></input></td></tr> -->\
 		<tr><th>Nameserver:</th><td><input type="text" name="nameserver"></input></td><td></td></tr>\
 		<!-- <tr><th>Scope:</th><td><select name="scope"><option>global</option><option>link</option><option>host</option></select></td></tr> -->\
 		</table>\
@@ -87,15 +85,10 @@ $.ajax("current_settings.php", {
 		$ifconfig_aliases.accordion();
 	}
 	$("#interfaces").tabs();
+	$("input:button").button();
 }).fail(function (XHR, status, error) {
 	alert("Failed to get configuration information!");
 });
 </script>
-<!--
-<div id="interface-lo" class="interface">
-	<p>Nothing to configure.</p>
-</div>
-<div id="interface-eth0" class="interface">
--->
 </body>
 </html>
