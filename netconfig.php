@@ -21,7 +21,7 @@ function interfaces_reserved() {
 		if ($file[0] == ".") {
 			continue;
 		}
-		if ($file == "autojson") {
+		if ($file == "piNetConfig") {
 			continue;
 		}
 		$interfaces = interfaces_scan($interfaces, "/etc/network/interfaces.d/" . $file);

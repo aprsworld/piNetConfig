@@ -4,6 +4,14 @@
 <link rel="stylesheet" href="res/jquery-ui-1.11.4.custom/jquery-ui.min.css" />
 <script src="res/jquery-2.2.4.min.js"></script>
 <script src="res/jquery-ui-1.11.4.custom/jquery-ui.min.js"></script>
+<style>
+.system, .system a {
+/*	color: #C66 !important; */
+}
+.system_back {
+	background-color: #CCC !important;
+}
+</style>
 <script>
 
 </script>
@@ -12,8 +20,14 @@
 <body>
 <h1>Network Configuration</h1>
 
-<h2>Interfaces</h2>
-<div id="interfaces">
+<br />
+<div style="float: right;" id="buttons">
+<input type="button" name="reset" value="Reset"></input>
+<input type="button" name="update" value="Update"></input>
+</div>
+<br />
+
+<div style="clear: both;" id="interfaces">
 <ul></ul>
 </div>
 
@@ -26,12 +40,15 @@ $.ajax("current_settings.php", {
 	headers:	{}
 }).done(function (data, status, XHR) {
 	for (var iface in data) {
-		$('#interfaces ul').append('<li><a href="#interface-' + iface + '">' + iface + '</a></li>');
+		var $li = $('<li><a href="#interface-' + iface + '">' + iface + '</a></li>');
+		$('#interfaces ul').append($li);
 		var $ifconfig = $('<div class="interface"></div>');
 		$ifconfig.attr('id', 'interface-' + iface);
-		$ifconfig_aliases = $('<div class="interface-aliases"></div>');
+		$ifconfig_aliases = $('<div class="config-interface"></div>');
 		if (data[iface].system) {
-			$ifconfig.append('<div><b style="color: #F00;">System Configured!</b></div>');
+			$li.addClass('system');
+			$ifconfig.addClass('system_back');
+			$ifconfig.append('<div><b style="color: #C00;">Configured by the System.</b></div>');
 		}
 		$ifconfig.append('\
 	<span><table border=0>\
@@ -48,14 +65,14 @@ $.ajax("current_settings.php", {
 			$alconfig = $('<div class="alias"></div>');
 			$alconfig.attr('id', 'interface-' + iface + '-' + alias);
 			$alconfig.html('\
-	<span class="title">Configuration Method:</span>\
-	<span class="form">\
-		<select class="configure-method" name="method">\
-			<option value="dhcp">DHCP</option>\
-			<option value="static">Static</option>\
-		</select>\
-	</span>\
-	<div class="method method-manual">\
+	<div class="config-alias">\
+		<span class="title">Configuration Method:</span>\
+		<span class="form">\
+			<select class="configure-method" name="method">\
+				<option value="dhcp">DHCP</option>\
+				<option value="static">Static</option>\
+			</select>\
+		</span>\
 		<table border=0>\
 		<!-- <tr><th>Hostname:</th><td><input type="text" name="hostname"></input></td></tr> -->\
 		<tr><th>Address:</th><td><input type="text" name="address" value="'+inet.address+'"></input></td></tr>\
@@ -71,7 +88,12 @@ $.ajax("current_settings.php", {
 	$alconfig.find(".configure-method").selectmenu({
 		width:	128,
 	});
-			$ifconfig_aliases.append('<h3>' + alias + '</h3>');
+			$ifconfig_alias_title = $('<h3>' + alias + '</h3>');
+			if (data[iface].system) {
+				$ifconfig_alias_title.addClass("system");
+				$alconfig.addClass("system_back");
+			}
+			$ifconfig_aliases.append($ifconfig_alias_title);
 			$ifconfig_aliases.append($alconfig);
 		}
 		$('#interfaces').append($ifconfig);
