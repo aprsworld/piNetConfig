@@ -175,14 +175,6 @@ function ip_parse($s) {
 	return $ret;
 }
 
-	$reserved_list = interfaces_reserved();
-	$reserved = Array();
-	for ($i = 0; $i < sizeof($reserved_list); $i++) {
-		$if = $reserved_list[$i];
-		$reserved[$if] = Array();
-		$reserved[$if]['system'] = true;
-	}
-
 	$iwconfig_output = shell_exec("/sbin/iwconfig 2> /dev/null");
 	if ($iwconfig_output == NULL) {
 		$iwconfig = Array();
@@ -208,6 +200,7 @@ function ip_parse($s) {
 	}
 	$ip = ip_parse($ip_output);
 
-	$config = array_merge_recursive($reserved, $ip_link, $ip_route, $ip, $iwconfig);
+	$config = array_merge_recursive($ip_link, $ip_route, $ip, $iwconfig);
+	$config['config'] = interfaces_read("/etc/network/interfaces");
 	echo json_encode($config);
 ?>

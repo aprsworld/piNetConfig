@@ -5,12 +5,6 @@
 <script src="res/jquery-2.2.4.min.js"></script>
 <script src="res/jquery-ui-1.11.4.custom/jquery-ui.min.js"></script>
 <style>
-.system, .system a {
-/*	color: #C66 !important; */
-}
-.system_back {
-	background-color: #CCC !important;
-}
 </style>
 <script>
 
@@ -45,11 +39,6 @@ $.ajax("current_settings.php", {
 		var $ifconfig = $('<div class="interface"></div>');
 		$ifconfig.attr('id', 'interface-' + iface);
 		$ifconfig_aliases = $('<div class="config-interface"></div>');
-		if (data[iface].system) {
-			$li.addClass('system');
-			$ifconfig.addClass('system_back');
-			$ifconfig.append('<div><b style="color: #C00;">Configured by the System.</b></div>');
-		}
 		$ifconfig.append('\
 	<span><table border=0>\
 	<tr><th>MAC Address:</th><td><input type="text" name="hwaddress" value="'+data[iface].hwaddress+'"></input></td></tr>\
@@ -89,10 +78,6 @@ $.ajax("current_settings.php", {
 		width:	128,
 	});
 			$ifconfig_alias_title = $('<h3>' + alias + '</h3>');
-			if (data[iface].system) {
-				$ifconfig_alias_title.addClass("system");
-				$alconfig.addClass("system_back");
-			}
 			$ifconfig_aliases.append($ifconfig_alias_title);
 			$ifconfig_aliases.append($alconfig);
 		}
