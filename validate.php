@@ -126,13 +126,11 @@ function parse_ip4_netsize2mask($size) {
 }
 
 function validate_ip4_address($octets) {
-	// Ensure node ip is valid
-	if ($octets[3] == 0 || $octets[3] == 255) {
+	// Ensure network ip is valid
+	if ($octets[0] == 0 || $octets[0] == 127 || ($octets[0] > 224 && $octets[0] < 240)) {
 		return false;
 	}
-
-	// Ensure network ip is valid
-	if ($octets[0] == 127 || ($octets[0] > 224 && $octets[0] < 240)) {
+	if ($octets[0] == 255 && $octets[1] == 255 && $octets[2] == 255 && $octets[3] == 255) {
 		return false;
 	}
 
@@ -147,6 +145,16 @@ function mask_ip4_address($ip, $mask) {
 	}
 	return $ret;
 }
+
+function compare_ip4_address($ip, $ip2) {
+	for ($i = 0; $i < 4; $i++) {
+		if ($ip[$i] != $ip2[$i]) {
+			return false;
+		}
+	}
+	return true;
+}
+
 
 function validate_ip4($ip_s, $gateway_s, $netmask_s) {
 
@@ -187,14 +195,36 @@ function validate_ip4($ip_s, $gateway_s, $netmask_s) {
 		}
 	}
 
-	// TODO: Gateway and IP are not Broadcast
+	// Gateway and IP are not Broadcast
+	$broadcast = Array();
+	for ($i = 0; $i < 4; $i++) {
+		$broadcast[$i] = $gateway_net[$i] | (~$netmask[$i] & 0xFF);
+	}
+	if (compare_ip4_address($broadcast, $ip)) {
+		return false;
+	}
+	if (compare_ip4_address($broadcast, $gateway)) {
+		return false;
+	}
 
-	// Validated
+	// General rules
+	if ($netsize >= 24) {
+		if ($ip[3] == 255 || $ip[3] == 0) {
+			return false;
+		}
+		if ($gateway[3] == 255 || $gateway[3] == 0) {
+			return false;
+		}
+	}
+
+	// Valid
 	return true;
 }
 
 function parse_ip4_address2string($a) {
 	return '' . $a[0] . '.' . $a[1] . '.' . $a[2] . '.' . $a[3];
 }
+
+//echo json_encode(validate_ip4("192.168.0.13", "192.168.0.1", "255.255.0.0"));
 
 ?>
