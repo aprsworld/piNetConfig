@@ -13,26 +13,33 @@ function interfaces_scan($interfaces, $filename) {
 	return array_unique($interfaces);
 }
 
-function config_add(&$config, $iface, $option, $value) {
+function config_add(&$config, $iface, $family, $option, $value) {
 	// Iface doesn't exist
 	if ($config[$iface] == NULL) {
 		$config[$iface] = Array();
 	}
+	$block =& $config[$iface];
+	if ($family) {
+		if ($block[$family] == NULL) {
+			$block[$family] = Array();
+		}
+		$block =& $block[$family];
+	}
 
 	// Option already exists
-	if (array_key_exists($option, $config[$iface])) {
+	if (array_key_exists($option, $block)) {
 		// Option isn't already an array
-		if (!is_array($config[$iface][$option])) {
-			$old_value = $config[$iface][$option];
-			$config[$iface][$option] = Array();
-			array_push($config[$iface][$option], $old_value);
+		if (!is_array($block[$option])) {
+			$old_value = $block[$option];
+			$block[$option] = Array();
+			array_push($block[$option], $old_value);
 		}
-		array_push($config[$iface][$option], $value);
+		array_push($block[$option], $value);
 		return;
 	}
 
 	// Normal addition
-	$config[$iface][$option] = $value;
+	$block[$option] = $value;
 	return;
 }
 
@@ -54,14 +61,14 @@ function interfaces_read($filename) {
 
 		// Auto
 		if (preg_match("/^auto[\s]+([^\s]+)$/", $clean_line, $matches)) {
-			config_add($config, $matches[1], "auto", true);
+			config_add($config, $matches[1], NULL, "auto", true);
 			continue;
 		}
 
 		// Allow (-hotplug)
 		if (preg_match("/^allow-([^\s]+)[\s]+([^\s]+)$/", $clean_line, $matches)) {
 			// TODO
-			config_add($config, $matches[2], "allow", $matches[1]);
+			config_add($config, $matches[2], NULL, "allow", $matches[1]);
 			continue;
 		}
 
@@ -70,7 +77,7 @@ function interfaces_read($filename) {
 			$iface = $matches[1];
 			$family = $matches[2];
 			$method = $matches[3];
-			config_add($config, $iface, "method", $method);
+			config_add($config, $iface, $family, "method", $method);
 			continue;
 		}
 
@@ -79,12 +86,11 @@ function interfaces_read($filename) {
 			return false;
 		}
 		if (preg_match("/^([^\s]+)[\s]+(.*)$/", $clean_line, $matches)) {
-			config_add($config, $iface, $matches[1], $matches[2]);
+			config_add($config, $iface, $family, $matches[1], $matches[2]);
 			continue;
 		}
 
 		// Oops!
-		echo $clean_line . " OOPS!";
 		return false;
 	}
 
