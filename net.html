@@ -41,7 +41,7 @@ $.ajax("current_settings.php", {
 		$ifconfig.attr('id', 'interface-' + iface);
 		$ifconfig_table = $('<table border=0>');
 		function add_option(config, data, $table, option, title, iface, alias) {
-			var option_id = 'config-' + iface + '-' + (alias) ? alias + '-' + option : '-' + option;
+			var option_id = 'config-' + iface + '-' + (alias ? alias + '-' + option : option);
 			var config_value = (alias) ? config[alias].inet[option] : config[iface][option];
 			var checked = (config_value) ? " checked" : "";
 			var disabled = (config_value) ? "" : " disabled";
@@ -50,7 +50,7 @@ $.ajax("current_settings.php", {
 				value = "";
 			}
 			var $tr = $('<tr>');
-			$tr.append('<th><label for="'+option_id+'-set">'+title+'</label><input id="'+option_id+'-set" type="checkbox" name="hwaddress_set"'+checked+'></input></th>');
+			$tr.append('<th><label for="'+option_id+'-set">'+title+'</label><input id="'+option_id+'-set" type="checkbox" name="'+option+'"'+checked+'></input></th>');
 			$tr.append('<td><input type="input" id="'+option_id+'" name="'+option+'" value="'+value+'"'+disabled+'></input></td>');
 			$tr.find('input[type=checkbox]').button();
 			$table.append($tr);
