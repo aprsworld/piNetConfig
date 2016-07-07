@@ -75,7 +75,7 @@ $.ajax("current_settings.php", {
 			add_option(config, data, $alias_table, 'netmask', 'Netmask', iface, alias);
 			//add_option(config, data, $alias_table, 'pointopoint', 'Point to Point', iface, alias);
 			add_option(config, data, $alias_table, 'gateway', 'Gateway', iface, alias);
-			add_option(config, data, $alias_table, 'metric', 'Metric', iface, alias);
+			//add_option(config, data, $alias_table, 'metric', 'Metric', iface, alias);
 			//add_option(config, data, $alias_table, 'nameserver', 'Nameserver', iface, alias);
 			$alconfig.append($alias_table);
 			$ifconfig_aliases.append('<h3>' + alias + '</h3>');
