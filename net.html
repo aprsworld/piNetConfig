@@ -5,10 +5,10 @@
 <script src="res/jquery-2.2.4.min.js"></script>
 <script src="res/jquery-ui-1.11.4.custom/jquery-ui.min.js"></script>
 <style>
+label {
+	width: 100%;
+}
 </style>
-<script>
-
-</script>
 </head>
 
 <body>
@@ -51,7 +51,7 @@ $.ajax("current_settings.php", {
 			}
 			var $tr = $('<tr>');
 			$tr.append('<th><label for="'+option_id+'-set">'+title+'</label><input id="'+option_id+'-set" type="checkbox" name="'+option+'"'+checked+'></input></th>');
-			$tr.append('<td><input type="input" id="'+option_id+'" name="'+option+'" value="'+value+'"'+disabled+'></input></td>');
+			$tr.append('<td><input type="text" id="'+option_id+'" name="'+option+'" value="'+value+'"'+disabled+'></input></td>');
 			$tr.find('input[type=checkbox]').button();
 			$table.append($tr);
 		}
