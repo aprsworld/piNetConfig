@@ -15,8 +15,8 @@
 <h1 style="float: left;">Network Configuration</h1>
 
 <div style="float: right;" id="buttons">
-<input type="button" name="reset" value="Reset"></input>
-<input type="button" name="update" value="Update"></input>
+<input id="reset" type="button" name="reset" value="Reset"></input>
+<input id="update" type="button" name="update" value="Update"></input>
 </div>
 
 <div style="clear: both;" id="interfaces">
@@ -37,22 +37,52 @@ $.ajax("current_settings.php", {
 		var $li = $('<li><a href="#interface-' + iface + '">' + iface + '</a></li>');
 		$('#interfaces ul').append($li);
 		var $ifconfig = $('<div class="interface"></div>');
+		$('#interfaces').append($ifconfig);
 		$ifconfig.attr('id', 'interface-' + iface);
+		$ifconfig_table = $('<table border=0>');
+		function add_option(config, data, $table, option, title, iface, alias) {
+			var option_id = 'config-' + iface + '-' + (alias) ? alias + '-' + option : '-' + option;
+			var config_value = (alias) ? config[alias].inet[option] : config[iface][option];
+			var checked = (config_value) ? " checked" : "";
+			var disabled = (config_value) ? "" : " disabled";
+			var value = (config_value) ? config_value : (alias) ? data[iface][alias].inet[option] : data[iface][option];
+			if (value === null || value == undefined) {
+				value = "";
+			}
+			var $tr = $('<tr>');
+			$tr.append('<th><label for="'+option_id+'-set">'+title+'</label><input id="'+option_id+'-set" type="checkbox" name="hwaddress_set"'+checked+'></input></th>');
+			$tr.append('<td><input type="input" id="'+option_id+'" name="'+option+'" value="'+value+'"'+disabled+'></input></td>');
+			$tr.find('input[type=checkbox]').button();
+			$table.append($tr);
+		}
+		add_option(config, data, $ifconfig_table, 'hwaddress', 'MAC Address', iface);
+		add_option(config, data, $ifconfig_table, 'mtu', 'MTU', iface);
+		$ifconfig.append($ifconfig_table);
+		$ifconfig.append('<br />');
+
 		$ifconfig_aliases = $('<div class="config-interface"></div>');
-		$ifconfig.append('\
-	<span><table border=0>\
-	<tr><th>MAC Address:</th><td><input type="text" name="hwaddress" value="'+data[iface].hwaddress+'"></input></td></tr>\
-	<tr><th>MTU:</th><td><input type="text" name="mtu" value="'+data[iface].mtu+'"></input></td></tr>\
-	</table><br /></span>\
-		');
 		$ifconfig.append($ifconfig_aliases);
 		for (var alias in data[iface]) {
 			var inet = data[iface][alias]['inet'];
 			if (!inet) {
 				continue;
 			}
-			$alconfig = $('<div class="alias"></div>');
+			var $alconfig = $('<div class="alias"></div>');
 			$alconfig.attr('id', 'interface-' + iface + '-' + alias);
+			var $alias_table = $('<table border="0"></table>');
+			//add_option(config, data, $alias_table, 'hostname', 'Hostname', iface, alias);
+			add_option(config, data, $alias_table, 'address', 'Address', iface, alias);
+			add_option(config, data, $alias_table, 'netmask', 'Netmask', iface, alias);
+			//add_option(config, data, $alias_table, 'pointopoint', 'Point to Point', iface, alias);
+			add_option(config, data, $alias_table, 'gateway', 'Gateway', iface, alias);
+			add_option(config, data, $alias_table, 'metric', 'Metric', iface, alias);
+			//add_option(config, data, $alias_table, 'nameserver', 'Nameserver', iface, alias);
+			$alconfig.append($alias_table);
+			$ifconfig_aliases.append('<h3>' + alias + '</h3>');
+			$ifconfig_aliases.append($alconfig);
+		}
+		$ifconfig_aliases.accordion();
+/*
 			$alconfig.html('\
 	<div class="config-alias">\
 		<span class="title">Configuration Method:</span>\
@@ -63,31 +93,57 @@ $.ajax("current_settings.php", {
 			</select>\
 		</span>\
 		<table border=0>\
-		<!-- <tr><th>Hostname:</th><td><input type="text" name="hostname"></input></td></tr> -->\
-		<tr><th>Address:</th><td><input type="text" name="address" value="'+inet.address+'"></input></td></tr>\
-		<tr><th>Netmask:</th><td><input type="text" name="netmask" value="'+inet.netmask+'"></input></td></tr>\
-		<!-- <tr><th>End Point:</th><td><input type="text" name="pointopoint"></input></td></tr> -->\
-		<tr><th>Gateway:</th><td><input type="text" name="gateway" value="'+inet.gateway+'"></input></td></tr>\
-		<!-- <tr><th>GW Metric:</th><td><input type="text" name="metric" value="'+inet.metric+'"></input></td></tr> -->\
-		<tr><th>Nameserver:</th><td><input type="text" name="nameserver"></input></td><td></td></tr>\
 		<!-- <tr><th>Scope:</th><td><select name="scope"><option>global</option><option>link</option><option>host</option></select></td></tr> -->\
 		</table>\
 	</div>');
-	
 	$alconfig.find(".configure-method").selectmenu({
 		width:	128,
 	});
-			$ifconfig_alias_title = $('<h3>' + alias + '</h3>');
-			$ifconfig_aliases.append($ifconfig_alias_title);
-			$ifconfig_aliases.append($alconfig);
-		}
-		$('#interfaces').append($ifconfig);
-		$ifconfig_aliases.accordion();
+*/
 	}
 	$("#interfaces").tabs();
-	$("input:button").button();
 }).fail(function (XHR, status, error) {
 	alert("Failed to get configuration information!");
+});
+$("input:button").button();
+$("#reset").click(function (event) {
+	location.reload();
+});
+$("#update").click(function (event) {
+	var config = {};
+	$(".interface").each(function (index, el) {
+		var iface = $(this).attr('id').substring(10);
+		config[iface] = {
+			mtu: $(this).find('input[name="mtu"]').first().val()
+		};
+		$(this).find('.alias').each(function (index, el) {
+			var alias = $(this).attr('id').substring(iface.length + 11);
+			if (alias != iface) {
+				config[alias] = {};
+			}
+			config[alias].inet = {};
+			$(this).find('input[type=text]').each(function (index, el) {
+				if ($(this).prop('disabled')) {
+					return;
+				}
+				var option = $(this).prop('name');
+				var value = $(this).val();
+				if (value.trim() == "" || value == "undefined") {
+					return;
+				}
+				if (config[alias].inet[option] != undefined) {
+					if ($.isArray(config[alias].inet[option])) {
+						config[alias].inet[option].push(value);
+					} else {
+						config[alias].inet[option] = [ config[alias].inet[option], value ];
+					}
+				} else {
+					config[alias].inet[option] = value;
+				}
+			});
+		});
+	});
+	alert(JSON.stringify(config));
 });
 </script>
 </body>
