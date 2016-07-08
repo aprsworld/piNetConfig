@@ -65,12 +65,25 @@ $.ajax("current_settings.php", {
 		$ifconfig_aliases = $('<div class="config-interface"></div>');
 		$ifconfig.append($ifconfig_aliases);
 		for (var alias in data[iface]) {
-			var inet = data[iface][alias]['inet'];
+			var inet = data[iface][alias].inet;
 			if (!inet) {
 				continue;
 			}
+			var inet_config = config[alias].inet;
 			var $alconfig = $('<div class="alias"></div>');
 			$alconfig.attr('id', 'interface-' + iface + '-' + alias);
+			var $config_select = $('<select name="method"></select>');
+			if (inet_config.method == "dhcp" || inet_config.method == "static") {
+				$config_select.append('<option value="dhcp">DHCP</option>');
+				$config_select.append('<option value="static">Static</option>');
+			} else {
+				$config_select.append('<option>'+inet_config.method+'</option>');
+			}
+			$config_select.val(inet_config.method);
+			$alconfig.append($config_select);
+			$config_select.selectmenu({
+				width: 192
+			});
 			var $alias_table = $('<table border="0"></table>');
 			//add_option(config, data, $alias_table, 'hostname', 'Hostname', iface, alias);
 			add_option(config, data, $alias_table, 'address', 'Address', iface, alias);
