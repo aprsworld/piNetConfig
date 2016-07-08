@@ -3,6 +3,7 @@ require('validate.php');
 require('netconfig.php');
 
 // Parse iwconfig output
+// TODO XXX
 function iwconfig_parse($s) {
 	$interfaces_string = split("\n\n", $s);
 	$ret = Array();
@@ -124,7 +125,7 @@ function ip_parse_route($s) {
 	return $ret;
 }
 
-function ip_parse($s) {
+function ip_parse_address($s) {
 	$interfaces_string = split("\n", $s);
 	$ret = Array();
 
@@ -198,7 +199,7 @@ function ip_parse($s) {
 	if ($ip_output == NULL) {
 		exit(-1);
 	}
-	$ip = ip_parse($ip_output);
+	$ip = ip_parse_address($ip_output);
 
 	$config = array_merge_recursive($ip_link, $ip_route, $ip, $iwconfig);
 	$config['config'] = interfaces_read("/etc/network/interfaces");
