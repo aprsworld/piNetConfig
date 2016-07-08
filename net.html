@@ -49,6 +49,47 @@ label {
 </div>
 
 <script>
+$("#update").prop('disabled', true);
+$("input:button").button();
+$("#reset").click(function (event) {
+	location.reload();
+});
+$("#update").click(function (event) {
+	var config = {};
+	$(".interface").each(function (index, el) {
+		var iface = $(this).attr('id').substring(10);
+		config[iface] = {
+			mtu: $(this).find('input[name="mtu"]').first().val()
+		};
+		$(this).find('.alias').each(function (index, el) {
+			var alias = $(this).attr('id').substring(iface.length + 11);
+			if (alias != iface) {
+				config[alias] = {};
+			}
+			config[alias].inet = {};
+			$(this).find('input[type=text]').each(function (index, el) {
+				if ($(this).prop('disabled')) {
+					return;
+				}
+				var option = $(this).prop('name');
+				var value = $(this).val();
+				if (value.trim() == "" || value == "undefined") {
+					return;
+				}
+				if (config[alias].inet[option] != undefined) {
+					if ($.isArray(config[alias].inet[option])) {
+						config[alias].inet[option].push(value);
+					} else {
+						config[alias].inet[option] = [ config[alias].inet[option], value ];
+					}
+				} else {
+					config[alias].inet[option] = value;
+				}
+			});
+		});
+	});
+	alert(JSON.stringify(config));
+});
 $.ajax("current_settings.php", {
 	context:	this,
 	cache:		false,
@@ -143,48 +184,9 @@ $.ajax("current_settings.php", {
 */
 	}
 	$("#interfaces").tabs();
+	$('#update').button('enable');
 }).fail(function (XHR, status, error) {
 	alert("Failed to get configuration information!");
-});
-$("input:button").button();
-$("#reset").click(function (event) {
-	location.reload();
-});
-$("#update").click(function (event) {
-	var config = {};
-	$(".interface").each(function (index, el) {
-		var iface = $(this).attr('id').substring(10);
-		config[iface] = {
-			mtu: $(this).find('input[name="mtu"]').first().val()
-		};
-		$(this).find('.alias').each(function (index, el) {
-			var alias = $(this).attr('id').substring(iface.length + 11);
-			if (alias != iface) {
-				config[alias] = {};
-			}
-			config[alias].inet = {};
-			$(this).find('input[type=text]').each(function (index, el) {
-				if ($(this).prop('disabled')) {
-					return;
-				}
-				var option = $(this).prop('name');
-				var value = $(this).val();
-				if (value.trim() == "" || value == "undefined") {
-					return;
-				}
-				if (config[alias].inet[option] != undefined) {
-					if ($.isArray(config[alias].inet[option])) {
-						config[alias].inet[option].push(value);
-					} else {
-						config[alias].inet[option] = [ config[alias].inet[option], value ];
-					}
-				} else {
-					config[alias].inet[option] = value;
-				}
-			});
-		});
-	});
-	alert(JSON.stringify(config));
 });
 </script>
 </body>
