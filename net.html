@@ -118,9 +118,27 @@ $.ajax("current_settings.php", {
 			var $tr = $('<tr>');
 			$tr.append('<th><label for="'+option_id+'-set">'+title+'</label><input id="'+option_id+'-set" type="checkbox" name="'+option+'"'+checked+'></input></th>');
 			$tr.append('<td><input type="text" id="'+option_id+'" name="'+option+'" value="'+value+'"'+disabled+'></input></td>');
+			$tr.find('input[type=text]').data('value_orig', config_value).data('$label', $tr.find('label')).on('change', function(ev) {
+				var value = $(this).val();
+				var value_orig = $(this).data('value_orig');
+				if (value != value_orig) {
+					$(this).data('$label').addClass("ui_changed");
+				} else {
+					$(this).data('$label').removeClass("ui_changed");
+				}
+			});
 			$tr.find('input[type=checkbox]').button().click(function(ev) {
-				$(this).parent().children().addClass("ui_changed");
-				$(this).parent().parent().find('input[type="text"]').attr('disabled', !$(this).prop('checked'));
+				var set = $(this).prop('checked');
+				var $input = $(this).parent().parent().find('input[type=text]');
+				var value = $input.val();
+				var value_orig = $input.data('value_orig');
+
+				if (!set && value_orig == undefined || set && value_orig == value) {
+					$input.data('$label').removeClass("ui_changed");
+				} else {
+					$input.data('$label').addClass("ui_changed");
+				}
+				$input.attr('disabled', !set);
 			});
 			$table.append($tr);
 		}
