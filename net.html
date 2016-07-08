@@ -118,7 +118,7 @@ $.ajax("current_settings.php", {
 			var $tr = $('<tr>');
 			$tr.append('<th><label for="'+option_id+'-set">'+title+'</label><input id="'+option_id+'-set" type="checkbox" name="'+option+'"'+checked+'></input></th>');
 			$tr.append('<td><input type="text" id="'+option_id+'" name="'+option+'" value="'+value+'"'+disabled+'></input></td>');
-			$tr.find('input[type=text]').data('value_orig', config_value).data('$label', $tr.find('label')).on('change', function(ev) {
+			$tr.find('input[type=text]').data('value_orig', config_value).data('$label', $tr.find('label')).bind('propertychange change keyup click keyup input paste', function(ev) {
 				var value = $(this).val();
 				var value_orig = $(this).data('value_orig');
 				if (value != value_orig) {
