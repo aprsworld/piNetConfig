@@ -20,10 +20,13 @@ function config_add(&$config, $iface, $family, $option, $value) {
 	}
 	$block =& $config[$iface];
 	if ($family) {
-		if ($block[$family] == NULL) {
-			$block[$family] = Array();
+		if ($block['protocol'] == NULL) {
+			$block['protocol'] = Array();
+			$block['protocol'][$family] = Array();
+		} else if ($block['protocol'][$family] == NULL) {
+			$block['protocol'][$family] = Array();
 		}
-		$block =& $block[$family];
+		$block =& $block['protocol'][$family];
 	}
 
 	// Option already exists
