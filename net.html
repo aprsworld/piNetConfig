@@ -52,7 +52,9 @@ $.ajax("current_settings.php", {
 			var $tr = $('<tr>');
 			$tr.append('<th><label for="'+option_id+'-set">'+title+'</label><input id="'+option_id+'-set" type="checkbox" name="'+option+'"'+checked+'></input></th>');
 			$tr.append('<td><input type="text" id="'+option_id+'" name="'+option+'" value="'+value+'"'+disabled+'></input></td>');
-			$tr.find('input[type=checkbox]').button();
+			$tr.find('input[type=checkbox]').button().click(function(ev) {
+				$(this).parent().parent().find('input[type="text"]').attr('disabled', !$(this).prop('checked'));
+			});
 			$table.append($tr);
 		}
 		add_option(config, data, $ifconfig_table, 'hwaddress', 'MAC Address', iface);
