@@ -135,11 +135,27 @@ $.ajax("current_settings.php", {
 
 				if (!set && value_orig == undefined || set && value_orig == value) {
 					$input.data('$label').removeClass("ui_changed");
+					if ($input.data('$alias_contents').find(".ui_changed").size() == 0) {
+						$input.data('$alias_contents').prev().removeClass("ui_changed");
+					}
+					if ($input.data('$iface_contents').find(".ui_changed").size() == 0) {
+						$input.data('$iface').removeClass("ui_changed");
+					}
 				} else {
 					$input.data('$label').addClass("ui_changed");
+					$input.data('$alias_contents').prev().addClass("ui_changed");
+					$input.data('$iface').addClass("ui_changed");
 				}
 				$input.attr('disabled', !set);
 			});
+			$tr.find('input[type=text]').data('iface', iface);
+			$tr.find('input[type=text]').data('alias', alias);
+			$tr.find('input[type=text]').data('$iface', $li).data('$iface_contents', $ifconfig);
+			if (!$alconfig) {
+				$tr.find('input[type=text]').data('$alias_contents', $('')).data('$alias', $(''));
+			} else {
+				$tr.find('input[type=text]').data('$alias_contents', $alconfig).data('$alias', $alconfig.prev());
+			}
 			$table.append($tr);
 		}
 		add_option(config, data, $ifconfig_table, 'hwaddress', 'MAC Address', iface);
