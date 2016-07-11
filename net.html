@@ -30,7 +30,7 @@ label {
 	border-color:		#7F7F7F !important;
 	color:			#000 !important;
 }
-.ui_changed.ui-state-active, .ui_changed.ui-selectmenu-button{
+.ui_changed.ui-state-active, .ui_changed.ui-selectmenu-button {
 	background-color:	#007F00 !important;
 	border-color:		#003E00 !important;
 	color:			#FFF !important;
@@ -105,21 +105,28 @@ $("#update").click(function (event) {
 
 function ui_changed($input) {
 	var $label = $input.data('$label');
+	if (!$label) {
+		$label = $input.next();
+	}
 	var $checkbox = $input.data('$checkbox');
+	if (!$checkbox) {
+		$checkbox = $('<input type="checkbox" checked></input>');
+	}
 	var $iface = $input.data('$iface');
 	var $iface_widget = $input.data('$iface_widget');
 	var $alias = $input.data('$alias');
 	var $alias_widget = $input.data('$alias_widget');
+	var disabled = $checkbox.prop('disabled');
 	var set = $checkbox.prop('checked');
 	var value = $input.val();
 	var value_orig = $input.data('value_orig');
 
-	if (set && $input.prop('disabled')) {
+	if ((!disabled && set) && $input.prop('disabled')) {
 		$input.button('enable');
-	} else if (!set && !$input.prop('disabled')) {
+	} else if ((disabled || !set) && !$input.prop('disabled')) {
 		$input.button('disable');
 	}
-	if (!set && value_orig == undefined || set && value_orig == value) {
+	if (disabled || (!set && value_orig == undefined || set && value_orig == value)) {
 		if (!$label.hasClass("ui_changed")) {
 			return;
 		}
@@ -144,6 +151,10 @@ function ui_changed($input) {
 
 function add_option(config, data, $table, option, title, iface, alias) {
 	var option_id = 'config-' + iface + '-' + (alias ? alias + '-' + option : option);
+	var available = true;
+	if (alias && config[alias].protocol.inet.method != 'static')  {
+		available = false;
+	}
 	var config_value = (alias) ? config[alias].protocol.inet[option] : config[iface][option];
 	var checked = (config_value) ? " checked" : "";
 	var disabled = (config_value) ? "" : " disabled";
@@ -155,6 +166,7 @@ function add_option(config, data, $table, option, title, iface, alias) {
 	var $tr = $('<tr>');
 	var $label = $('<label for="'+option_id+'-set">'+title+'</label>');
 	var $checkbox = $('<input id="'+option_id+'-set" type="checkbox" name="'+option+'"'+checked+'></input>');
+	$checkbox.prop('disabled', !available);
 	var $th = $('<th></th>').append($label).append($checkbox);
 	$tr.append($th);
 	var $input = $('<input type="text" id="'+option_id+'" name="'+option+'" value="'+value+'"'+disabled+'></input>');
@@ -214,9 +226,21 @@ $.ajax("current_settings.php", {
 				$config_select.append('<option>'+inet_config.method+'</option>');
 			}
 			$config_select.val(inet_config.method);
+			$config_select.data('value_orig', inet_config.method);
 			$alconfig.append($config_select);
 			$config_select.selectmenu({
-				width: 192
+				width: 192,
+				change: function (ev) {
+					if ($(this).val() == 'static') {
+						$(this).data('$inputs').filter('input[type=checkbox]').button('enable');
+					} else {
+						$(this).data('$inputs').filter('input[type=checkbox]').button('disable');
+					}
+					$(this).data('$inputs').filter('input[type=checkbox]').each(function (ev) {
+						ui_changed($(this).data('$input'));
+					});
+					ui_changed($(this));
+				}
 			});
 			var $alias_table = $('<table border="0"></table>');
 			//add_option(config, data, $alias_table, 'hostname', 'Hostname', iface, alias);
@@ -227,14 +251,15 @@ $.ajax("current_settings.php", {
 			//add_option(config, data, $alias_table, 'metric', 'Metric', iface, alias);
 			//add_option(config, data, $alias_table, 'nameserver', 'Nameserver', iface, alias);
 			$alconfig.append($alias_table);
+			$config_select.data('$inputs', $alias_table.find('input'));
 			var $alias_widget = $('<h3>' + alias + '</h3>');
 			$ifconfig_aliases.append($alias_widget);
 			$ifconfig_aliases.append($alconfig);
-			$alconfig.find('input').data('$alias', $alconfig)
+			$alconfig.find('input, select').data('$alias', $alconfig)
 					.data('$alias_widget', $alias_widget);
 		}
 		$ifconfig_aliases.accordion();
-		$ifconfig.find('input').data('$iface', $ifconfig)
+		$ifconfig.find('input, select').data('$iface', $ifconfig)
 				.data('$iface_widget', $li);
 /*
 			$alconfig.html('\
