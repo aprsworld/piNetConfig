@@ -8,6 +8,15 @@
 label {
 	width: 100%;
 }
+.ui-textfield {
+	font:		inherit;
+	color:		inherit;
+	background:	none;
+	background-color:	#FFF !important;
+	text-align:	inherit;
+	outline:	none;
+	cursor:		text;
+}
 .ui-selectmenu-button {
 	background-color:	#007FFF !important;
 	border-color:		#003ECF !important;
@@ -90,6 +99,79 @@ $("#update").click(function (event) {
 	});
 	alert(JSON.stringify(config));
 });
+
+function ui_changed($input) {
+	var $label = $input.data('$label');
+	var $checkbox = $input.data('$checkbox');
+	var $iface = $input.data('$iface');
+	var $iface_widget = $input.data('$iface_widget');
+	var $alias = $input.data('$alias');
+	var $alias_widget = $input.data('$alias_widget');
+	var set = $checkbox.prop('checked');
+	var value = $input.val();
+	var value_orig = $input.data('value_orig');
+
+	if (set && $input.prop('disabled')) {
+		$input.button('enable');
+	} else if (!set && !$input.prop('disabled')) {
+		$input.button('disable');
+	}
+	if (!set && value_orig == undefined || set && value_orig == value) {
+		if (!$label.hasClass("ui_changed")) {
+			return;
+		}
+		$label.removeClass("ui_changed");
+		if ($alias && $alias.find(".ui_changed").size() == 0) {
+			$alias_widget.removeClass("ui_changed");
+		}
+		if ($iface.find(".ui_changed").size() == 0) {
+			$iface_widget.removeClass("ui_changed");
+		}
+	} else {
+		if ($label.hasClass("ui_changed")) {
+			return;
+		}
+		$label.addClass("ui_changed");
+		if ($alias) {
+			$alias_widget.addClass("ui_changed");
+		}
+		$iface_widget.addClass("ui_changed");
+	}
+}
+
+function add_option(config, data, $table, option, title, iface, alias) {
+	var option_id = 'config-' + iface + '-' + (alias ? alias + '-' + option : option);
+	var config_value = (alias) ? config[alias].protocol.inet[option] : config[iface][option];
+	var checked = (config_value) ? " checked" : "";
+	var disabled = (config_value) ? "" : " disabled";
+	var value = (config_value) ? config_value : (alias) ? data[iface][alias].inet[option] : data[iface][option];
+	if (value === null || value == undefined) {
+		value = "";
+	}
+
+	var $tr = $('<tr>');
+	var $label = $('<label for="'+option_id+'-set">'+title+'</label>');
+	var $checkbox = $('<input id="'+option_id+'-set" type="checkbox" name="'+option+'"'+checked+'></input>');
+	var $th = $('<th></th>').append($label).append($checkbox);
+	$tr.append($th);
+	var $input = $('<input type="text" id="'+option_id+'" name="'+option+'" value="'+value+'"'+disabled+'></input>');
+	var $td = $('<td></td>').append($input);
+	$tr.append($td);
+
+	$checkbox.data('$input', $input);
+	$input.data('value_orig', config_value);
+	$input.data('$label', $label);
+	$input.data('$checkbox', $checkbox);
+	$input.button().addClass('ui-textfield').off('mouseenter').off('mousedown').off('keydown').bind('propertychange change keyup click keyup input paste', function(ev) {
+		ui_changed($(this));
+	});
+	$checkbox.button().bind('click change keyup propertychange input', function(ev) {
+		ui_changed($(this).data('$input'));
+	});
+	$table.append($tr);
+}
+
+
 $.ajax("current_settings.php", {
 	context:	this,
 	cache:		false,
@@ -106,58 +188,6 @@ $.ajax("current_settings.php", {
 		$('#interfaces').append($ifconfig);
 		$ifconfig.attr('id', 'interface-' + iface);
 		$ifconfig_table = $('<table border=0>');
-		function add_option(config, data, $table, option, title, iface, alias) {
-			var option_id = 'config-' + iface + '-' + (alias ? alias + '-' + option : option);
-			var config_value = (alias) ? config[alias].protocol.inet[option] : config[iface][option];
-			var checked = (config_value) ? " checked" : "";
-			var disabled = (config_value) ? "" : " disabled";
-			var value = (config_value) ? config_value : (alias) ? data[iface][alias].inet[option] : data[iface][option];
-			if (value === null || value == undefined) {
-				value = "";
-			}
-			var $tr = $('<tr>');
-			$tr.append('<th><label for="'+option_id+'-set">'+title+'</label><input id="'+option_id+'-set" type="checkbox" name="'+option+'"'+checked+'></input></th>');
-			$tr.append('<td><input type="text" id="'+option_id+'" name="'+option+'" value="'+value+'"'+disabled+'></input></td>');
-			$tr.find('input[type=text]').data('value_orig', config_value).data('$label', $tr.find('label')).bind('propertychange change keyup click keyup input paste', function(ev) {
-				var value = $(this).val();
-				var value_orig = $(this).data('value_orig');
-				if (value != value_orig) {
-					$(this).data('$label').addClass("ui_changed");
-				} else {
-					$(this).data('$label').removeClass("ui_changed");
-				}
-			});
-			$tr.find('input[type=checkbox]').button().click(function(ev) {
-				var set = $(this).prop('checked');
-				var $input = $(this).parent().parent().find('input[type=text]');
-				var value = $input.val();
-				var value_orig = $input.data('value_orig');
-
-				if (!set && value_orig == undefined || set && value_orig == value) {
-					$input.data('$label').removeClass("ui_changed");
-					if ($input.data('$alias_contents').find(".ui_changed").size() == 0) {
-						$input.data('$alias_contents').prev().removeClass("ui_changed");
-					}
-					if ($input.data('$iface_contents').find(".ui_changed").size() == 0) {
-						$input.data('$iface').removeClass("ui_changed");
-					}
-				} else {
-					$input.data('$label').addClass("ui_changed");
-					$input.data('$alias_contents').prev().addClass("ui_changed");
-					$input.data('$iface').addClass("ui_changed");
-				}
-				$input.attr('disabled', !set);
-			});
-			$tr.find('input[type=text]').data('iface', iface);
-			$tr.find('input[type=text]').data('alias', alias);
-			$tr.find('input[type=text]').data('$iface', $li).data('$iface_contents', $ifconfig);
-			if (!$alconfig) {
-				$tr.find('input[type=text]').data('$alias_contents', $('')).data('$alias', $(''));
-			} else {
-				$tr.find('input[type=text]').data('$alias_contents', $alconfig).data('$alias', $alconfig.prev());
-			}
-			$table.append($tr);
-		}
 		add_option(config, data, $ifconfig_table, 'hwaddress', 'MAC Address', iface);
 		add_option(config, data, $ifconfig_table, 'mtu', 'MTU', iface);
 		$ifconfig.append($ifconfig_table);
@@ -194,10 +224,15 @@ $.ajax("current_settings.php", {
 			//add_option(config, data, $alias_table, 'metric', 'Metric', iface, alias);
 			//add_option(config, data, $alias_table, 'nameserver', 'Nameserver', iface, alias);
 			$alconfig.append($alias_table);
-			$ifconfig_aliases.append('<h3>' + alias + '</h3>');
+			var $alias_widget = $('<h3>' + alias + '</h3>');
+			$ifconfig_aliases.append($alias_widget);
 			$ifconfig_aliases.append($alconfig);
+			$alconfig.find('input').data('$alias', $alconfig)
+					.data('$alias_widget', $alias_widget);
 		}
 		$ifconfig_aliases.accordion();
+		$ifconfig.find('input').data('$iface', $ifconfig)
+				.data('$iface_widget', $li);
 /*
 			$alconfig.html('\
 	<div class="config-alias">\
