@@ -225,9 +225,64 @@ function validate_ip4($ip_s, $netmask_s, $gateway_s) {
 	return true;
 }
 
+
 function parse_ip4_address2string($a) {
 	return '' . $a[0] . '.' . $a[1] . '.' . $a[2] . '.' . $a[3];
 }
+
+
+function config_validate ($config) {
+
+	foreach ($config as $iface => $ifconfig) {
+		foreach ($ifconfig['protocol'] as $protocol => $pconfig) {
+			if ($protocol != "inet") {
+				echo 'Warning: Unsupported protocol for ' . $iface . '.\n';
+				continue;
+			}
+			if (!array_key_exists('method', $pconfig)) {
+				echo 'ERROR: No configuration method for ' . $iface . ' ' . $protocol . ' configuration!\n';
+				return false;
+			}
+			$method = $pconfig['method'];
+			if ($method != "static" && $method != "dhcp" && $method != "loopback") {
+				echo "Warning: Unsupported configuration method " . $method . " for " . $iface . " " . $protocol . ".\n";
+			}
+			$address = NULL;
+			$netmask = NULL;
+			$gateway = NULL;
+			foreach ($pconfig as $option => $value) {
+				switch ($option) {
+				case 'method':
+					continue;
+				case 'address':
+					$address = $value;
+					break;
+				case 'netmask':
+					$netmask = $value;
+					break;
+				case 'gateway':
+					$gateway = $value;
+					break;
+				default:
+					echo "Warning: Unsupported option " . $option . " specified for " . $method . " configuration of " . $iface . " " . $protocol . " configuration.\n";
+					break;
+				}
+			}
+			if ($address && $netmask) {
+				if (!validate_ip4($address, $netmask, $gateway)) { 
+					echo "Error: Invalid configuration for " . $iface . " " . $protocol . "!\n";
+					return false;
+				}
+			} else if ($method == "static") {
+				echo "Error: Invalid configuration for " . $iface . " " . $protocol . "!\n";
+				return false;
+			}
+		}
+	}
+
+	return true;
+}
+
 
 //echo json_encode(validate_ip4("192.168.0.13", "192.168.0.1", "255.255.0.0"));
 
