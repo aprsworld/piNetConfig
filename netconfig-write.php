@@ -1,8 +1,8 @@
 #!/usr/bin/php5
 <?php
 
-$root_rw = "/usr/local/sbin/root-rw"
-$root_ro = "/usr/local/sbin/root-ro"
+$root_rw = "/usr/local/sbin/root-rw";
+$root_ro = "/usr/local/sbin/root-ro";
 
 require('netconfig.php');
 require('validate.php');
