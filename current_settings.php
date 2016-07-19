@@ -168,7 +168,7 @@ function ip_parse_address($s) {
 		}
 		$interface_config = Array();
 		$interface_config[$alias] = $alias_config;
-		if ($ret[$interface] == NULL) {
+		if (!array_key_exist($interface, $ret)) {
 			$ret[$interface] = $interface_config;
 		} else {
 			$ret[$interface] = array_merge_recursive($interface_config, $ret[$interface]);

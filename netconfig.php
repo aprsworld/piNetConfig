@@ -2,15 +2,15 @@
 
 function config_add(&$config, $iface, $family, $option, $value) {
 	// Iface doesn't exist
-	if ($config[$iface] == NULL) {
+	if (!array_key_exists($iface, $config)) {
 		$config[$iface] = Array();
 	}
 	$block =& $config[$iface];
 	if ($family) {
-		if ($block['protocol'] == NULL) {
+		if (!array_key_exists('protocol', $block)) {
 			$block['protocol'] = Array();
 			$block['protocol'][$family] = Array();
-		} else if ($block['protocol'][$family] == NULL) {
+		} else if (!array_key_exists($family, $block['protocol'])) {
 			$block['protocol'][$family] = Array();
 		}
 		$block =& $block['protocol'][$family];
@@ -45,7 +45,7 @@ function interfaces_read($filename) {
 		$clean_line = trim($line);
 
 		// Comments and blank lines
-		if ($clean_line[0] == '#' || empty($clean_line)) {
+		if (empty($clean_line) || $clean_line[0] == '#') {
 			continue;
 		}
 
