@@ -1,6 +1,7 @@
 <?php
 
 require('netconfig.php');
+require('validate.php');
 
 function config_validate ($config) {
 
@@ -18,21 +19,35 @@ function config_validate ($config) {
 			if ($method != "static" && $method != "dhcp" && $method != "loopback") {
 				echo "Warning: Unsupported configuration method " . $method . " for " . $iface . " " . $protocol . ".\n";
 			}
+			$address = NULL;
+			$netmask = NULL;
+			$gateway = NULL;
 			foreach ($pconfig as $option => $value) {
 				switch ($option) {
 				case 'method':
 					continue;
 				case 'address':
+					$address = $value;
+					break;
 				case 'netmask':
+					$netmask = $value;
+					break;
 				case 'gateway':
-					if ($method != "static") {
-						echo "Warning: " . $option . " specified for " . $method . " configuration of " . $iface . " " . $protocol . " configuration.\n";
-					}
+					$gateway = $value;
 					break;
 				default:
 					echo "Warning: Unsupported option " . $option . " specified for " . $method . " configuration of " . $iface . " " . $protocol . " configuration.\n";
 					break;
 				}
+			}
+			if ($address && $netmask) {
+				if (!validate_ip4($address, $netmask, $gateway)) { 
+					echo "Error: Invalid configuration for " . $iface . " " . $protocol . "!\n";
+					return false;
+				}
+			} else if ($method == "static") {
+				echo "Error: Invalid configuration for " . $iface . " " . $protocol . "!\n";
+				return false;
 			}
 		}
 	}

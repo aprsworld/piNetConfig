@@ -156,7 +156,7 @@ function compare_ip4_address($ip, $ip2) {
 }
 
 
-function validate_ip4($ip_s, $gateway_s, $netmask_s) {
+function validate_ip4($ip_s, $netmask_s, $gateway_s) {
 
 	// IP
 	$ip = parse_ip4_address($ip_s);
@@ -164,15 +164,6 @@ function validate_ip4($ip_s, $gateway_s, $netmask_s) {
 		return false;
 	}
 	if (!validate_ip4_address($ip)) {
-		return false;
-	}
-
-	// Gateway
-	$gateway = parse_ip4_address($gateway_s);
-	if (!$gateway) {
-		return false;
-	}
-	if (!validate_ip4_address($gateway)) {
 		return false;
 	}
 
@@ -186,24 +177,37 @@ function validate_ip4($ip_s, $gateway_s, $netmask_s) {
 		return false;
 	}
 
-	// Gateway is on IP network
-	$gateway_net = mask_ip4_address($gateway, $netmask);
+	// Network
 	$ip_net = mask_ip4_address($ip, $netmask);
-	for ($i = 0; $i < 4; $i++) {
-		if ($ip_net[$i] != $gateway_net[$i]) {
+
+	// Gateway
+	if ($gateway_s) {
+		$gateway = parse_ip4_address($gateway_s);
+		if (!$gateway) {
 			return false;
+		}
+		if (!validate_ip4_address($gateway)) {
+			return false;
+		}
+
+		// Gateway is on IP network
+		$gateway_net = mask_ip4_address($gateway, $netmask);
+		for ($i = 0; $i < 4; $i++) {
+			if ($ip_net[$i] != $gateway_net[$i]) {
+				return false;
+			}
 		}
 	}
 
 	// Gateway and IP are not Broadcast
 	$broadcast = Array();
 	for ($i = 0; $i < 4; $i++) {
-		$broadcast[$i] = $gateway_net[$i] | (~$netmask[$i] & 0xFF);
+		$broadcast[$i] = $ip_net[$i] | (~$netmask[$i] & 0xFF);
 	}
 	if (compare_ip4_address($broadcast, $ip)) {
 		return false;
 	}
-	if (compare_ip4_address($broadcast, $gateway)) {
+	if ($gateway_s && compare_ip4_address($broadcast, $gateway)) {
 		return false;
 	}
 
@@ -212,7 +216,7 @@ function validate_ip4($ip_s, $gateway_s, $netmask_s) {
 		if ($ip[3] == 255 || $ip[3] == 0) {
 			return false;
 		}
-		if ($gateway[3] == 255 || $gateway[3] == 0) {
+		if ($gateway_s && ($gateway[3] == 255 || $gateway[3] == 0)) {
 			return false;
 		}
 	}
