@@ -209,16 +209,16 @@ function ip4_compare_address(ip1, ip2) {
 	return true;
 }
 
-function ip4_validate_network(ip_s, gateway_s, netmask_s) {
+function ip4_validate_network(ip_s, netmask_s, gateway_s) {
 	var ip = ip4_parse_address(ip_s);
-	var gateway = ip4_parse_address(gateway_s);
+	var gateway = gateway_s ? ip4_parse_address(gateway_s) : null;
 	var netmask = ip4_parse_address(netmask_s);
 
-	if (!ip || !gateway || !netmask) {
+	if (!ip || !netmask || (gateway_s && !gateway)) {
 		return false;
 	}
 
-	if (!ip4_validate_address(ip) || !ip4_validate_address(gateway)) {
+	if (!ip4_validate_address(ip) || (gateway_s && !ip4_validate_address(gateway))) {
 		return false;
 	}
 
@@ -227,18 +227,21 @@ function ip4_validate_network(ip_s, gateway_s, netmask_s) {
 		return false;
 	}
 
-	var gateway_net = ip4_mask_address(gateway, netmask);
 	var ip_net = ip4_mask_address(ip, netmask);
-	if (!ip4_compare_address(gateway_net, ip_net)) {
-		return false;
+
+	if (gateway_s) {
+		var gateway_net = ip4_mask_address(gateway, netmask);
+		if (!ip4_compare_address(gateway_net, ip_net)) {
+			return false;
+		}
 	}
 
 	var broadcast = [];
 	var i;
 	for (i = 0; i < 4; i++) {
-		broadcast[i] = gateway_net[i] | (~netmask[i] & 0xFF);
+		broadcast[i] = ip_net[i] | (~netmask[i] & 0xFF);
 	}
-	if (ip4_compare_address(broadcast, ip) || ip4_compare_address(gateway, broadcast)) {
+	if (ip4_compare_address(broadcast, ip) || (gateway_s && ip4_compare_address(gateway, broadcast))) {
 		return false;
 	}
 
@@ -341,8 +344,33 @@ function ui_changed($input) {
 	}
 
 	var type = $input.attr('name');
-	if (type == 'address' || type == 'netmask' || type == 'gateway') {
-		if (set && !ip4_validate_address(ip4_parse_address(value))) {
+	if ($alias && (type == 'address' || type == 'netmask' || type == 'gateway')) {
+		var error = false;
+
+		if ((!set && type != 'gateway') || !ip4_validate_address(ip4_parse_address(value))) {
+			error = true;
+		} else {
+			var $address = $alias.find('input[type="text"][name="address"]');
+			var $netmask = $alias.find('input[type="text"][name="netmask"]');
+			var $gateway = $alias.find('input[type="text"][name="gateway"]');
+			var address = null;
+			if ($address.data('$checkbox').prop('checked') && ($address != $input && !$address.data('$label').hasClass("ui_error"))) {
+				address = $address.val();
+			}
+			var netmask = null;
+			if ($netmask.data('$checkbox').prop('checked') && ($netmask != $input && !$netmask.data('$label').hasClass("ui_error"))) {
+				netmask = $netmask.val();
+			}
+			var gateway = null;
+			if ($gateway.data('$checkbox').prop('checked') && ($gateway != $input && !$gateway.data('$label').hasClass("ui_error"))) {
+				gateway = $gateway.val();
+			}
+			if (address && netmask && !ip4_validate_network(address, netmask, gateway)) {
+				error = true;
+			}
+		}
+
+		if (error) {
 			if (!$label.hasClass("ui_error")) {
 				$label.addClass("ui_error");
 				if ($alias) {
