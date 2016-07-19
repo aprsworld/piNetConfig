@@ -50,7 +50,7 @@ function config_write ($config) {
 $config = interfaces_read("/etc/network/interfaces");
 if (config_validate($config)) {
 	if (!exec($root_rw)) {
-		echo "ERROR: Couldn't make filesystem writable!\n");
+		echo "ERROR: Couldn't make filesystem writable!\n";
 		return 1;
 	}
 	config_write($config);
