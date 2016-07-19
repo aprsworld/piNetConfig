@@ -18,7 +18,8 @@ function iwconfig_parse($s) {
 		// Parse each line
 		$lines = split("\n", $interface_string);
 		$ifname = trim(substr($lines[0], 0, 8));
-		$iftype = trim(split("  ", substr($lines[0], 9))[0]);
+		$tmp = split("  ", substr($lines[0], 9));
+		$iftype = trim($tmp[0]);
 		$ifsettings = Array();
 
 		// Parse settings/values
@@ -111,7 +112,8 @@ function ip_parse_route($s) {
 			continue;
 		}
 		$alias = $split[4];
-		$interface = split("[:.]", $alias, 2)[0];
+		$tmp = split("[:.]", $alias, 2);
+		$interface = $tmp[0];
 		// XXX: $metric = $split[8];
 		$gateway = $split[2];
 		$ret[$interface] = Array();
