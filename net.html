@@ -61,6 +61,196 @@ label {
 </div>
 
 <script>
+function ip4_parse_address(s) {
+	var octets_s = s.split(".");
+	var octets = [];
+	
+	if (octets_s.length != 4) {
+		return false;
+	}
+	
+	var i;
+	for (i = 0; i < 4; i++) {
+		if (!octets_s[i].match("^[0-9]([0-9]([0-9])?)?$")) {
+			return false;
+		}
+
+		var octet = parseInt(octets_s[i]);
+		if (octet < 0 || octet > 255) {
+			return false;
+		}
+		
+		octets[i] = octet;
+	}
+
+	return octets;
+}
+
+function ip4_parse_netsize(octets) {
+	var size = 0;
+
+	var i;
+	for (i = 0; i < 4; i++) {
+		if (i * 8 != size && octets[i] != 0) {
+			return false
+		}
+
+		switch (octets[i]) {
+		case 255:
+			size++;
+		case 254:
+			size++;
+		case 252:
+			size++;
+		case 248:
+			size++;
+		case 240:
+			size++;
+		case 224:
+			size++;
+		case 192:
+			size++;
+		case 128:
+			size++;
+		case 0:
+			break;
+		default:
+			return false;	// octet has a gap in it
+		}
+	}
+
+	return size;
+}
+
+function ip4_parse_netsize2mask(size) {
+	var octets = [];
+	
+	var full = size/8;
+	var rem = size%8;
+
+	var i;
+	for (i = 0; i < full; i++) {
+		octets[i] = 255;
+	}
+	
+	switch (rem) {
+		case 0:
+			octets[i] = 0;
+			break;
+		case 1:
+			octets[i] = 128;
+			break;
+		case 2:
+			octets[i] = 192;
+			break;
+		case 3:
+			octets[i] = 224;
+			break;
+		case 4:
+			octets[i] = 240;
+			break;
+		case 5:
+			octets[i] = 248;
+			break;
+		case 6:
+			octets[i] = 252;
+			break;
+		case 7:
+			octets[i] = 254;
+			break;
+		case 8:
+			octets[i] = 255;
+			break;
+		default:
+			return false;	// impossible
+	}
+
+	for (;i < 4; i++) {
+		octets[i] = 0;
+	}
+
+	return octets;
+}
+
+function ip4_validate_address(octets) {
+	if (!octets) {
+		return false;
+	}
+
+	if (octets[0] == 0 || octets[0] == 127 || (octets[0] > 224 && octets[0] < 240)) {
+		return false;
+	}
+
+	if (octets[0] == 255 && octets[1] == 255 && octets[2] == 255 && octets[3] == 255) {
+		return false;
+	}
+
+	return true;
+}
+
+function ip4_mask_address(ip, mask) {
+	var ret = [];
+
+	var i;
+	for (i = 0; i < 4; i++) {
+		ret = ip[i] & mask[i];
+	}
+
+	return ret;
+}
+
+function ip4_compare_address(ip1, ip2) {
+	var i;
+	for (i = 0; i < 4; i++) {
+		if (ip1[i] != ip2[i]) {
+			return false;
+		}
+	}
+	return true;
+}
+
+function ip4_validate_network(ip_s, gateway_s, netmask_s) {
+	var ip = ip4_parse_address(ip_s);
+	var gateway = ip4_parse_address(gateway_s);
+	var netmask = ip4_parse_address(netmask_s);
+
+	if (!ip || !gateway || !netmask) {
+		return false;
+	}
+
+	if (!ip4_validate_address(ip) || !ip4_validate_address(gateway)) {
+		return false;
+	}
+
+	var netsize = ip4_parse_netsize(netmask);
+	if (!netsize || netsize < 8 || netsize > 30) {
+		return false;
+	}
+
+	var gateway_net = ip4_mask_address(gateway, netmask);
+	var ip_net = ip4_mask_address(ip, netmask);
+	if (!ip4_compare_address(gateway_net, ip_net)) {
+		return false;
+	}
+
+	var broadcast = [];
+	var i;
+	for (i = 0; i < 4; i++) {
+		broadcast[i] = gateway_net[i] | (~netmask[i] & 0xFF);
+	}
+	if (ip4_compare_address(broadcast, ip) || ip4_compare_address(gateway, broadcast)) {
+		return false;
+	}
+
+	if (netsize >= 24) {
+		if (ip[3] == 0 || ip[3] == 255) {
+			return false;
+		}
+	}
+
+	return true;
+}
+
 $("#update").prop('disabled', true);
 $("input:button").button();
 $("#reset").click(function (event) {
@@ -131,22 +321,56 @@ function ui_changed($input) {
 			return;
 		}
 		$label.removeClass("ui_changed");
-		if ($alias && $alias.find(".ui_changed").size() == 0) {
-			$alias_widget.removeClass("ui_changed");
+		$label.removeClass("ui_error");
+		if ($alias) {
+			if ($alias.find(".ui_error").size() == 0) {
+				$alias_widget.removeClass("ui_error");
+			}
+			if ($alias.find(".ui_changed").size() == 0) {
+				$alias_widget.removeClass("ui_changed");
+			}
+		}
+		if ($iface.find(".ui_error").size() == 0) {
+			$iface_widget.removeClass("ui_error");
 		}
 		if ($iface.find(".ui_changed").size() == 0) {
 			$iface_widget.removeClass("ui_changed");
 		}
-	} else {
-		if ($label.hasClass("ui_changed")) {
-			return;
-		}
-		$label.addClass("ui_changed");
-		if ($alias) {
-			$alias_widget.addClass("ui_changed");
-		}
-		$iface_widget.addClass("ui_changed");
+
+		return;
 	}
+
+	var type = $input.attr('name');
+	if (type == 'address' || type == 'netmask' || type == 'gateway') {
+		if (set && !ip4_validate_address(ip4_parse_address(value))) {
+			if (!$label.hasClass("ui_error")) {
+				$label.addClass("ui_error");
+				if ($alias) {
+					$alias_widget.addClass("ui_error");
+				}
+				$iface_widget.addClass("ui_error");
+			}
+		} else {
+			if ($label.hasClass("ui_error")) {
+				$label.removeClass("ui_error");
+				if ($alias && $alias.find(".ui_error").size() == 0) {
+					$alias_widget.removeClass("ui_error").removeClass("ui_error");
+				}
+				if ($iface.find(".ui_error").size() == 0) {
+					$iface_widget.removeClass("ui_error");
+				}
+			}
+		}
+	}
+
+	if ($label.hasClass("ui_changed")) {
+		return;
+	}
+	$label.addClass("ui_changed");
+	if ($alias) {
+		$alias_widget.addClass("ui_changed");
+	}
+	$iface_widget.addClass("ui_changed");
 }
 
 function add_option(config, data, $table, option, title, iface, alias) {
