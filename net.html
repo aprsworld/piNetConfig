@@ -410,10 +410,15 @@ function ui_changed($input) {
 function add_option(config, data, $table, option, title, iface, alias) {
 	var option_id = 'config-' + iface + '-' + (alias ? alias + '-' + option : option);
 	var available = true;
-	if (alias && config[alias].protocol.inet.method != 'static')  {
+	if (alias && config[alias] && config[alias].protocol && config[alias].protocol.inet && config[alias].protocol.inet.method != 'static')  {
 		available = false;
 	}
-	var config_value = (alias) ? config[alias].protocol.inet[option] : config[iface][option];
+	var config_value = null;
+	if (alias && config[alias] && config[alias].protocol && config[alias].protocol.inet) {
+		config_value = config[alias].protocol.inet[option];
+	} else if (config[iface]) {
+		config_value = config[iface][option];
+	}
 	var checked = (config_value) ? " checked" : "";
 	var disabled = (config_value) ? "" : " disabled";
 	var value = (config_value) ? config_value : (alias) ? data[iface][alias].inet[option] : data[iface][option];
