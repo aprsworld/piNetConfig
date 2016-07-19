@@ -1,3 +1,4 @@
+#!/usr/bin/php5
 <?php
 
 $root_rw = "/usr/local/sbin/root-rw"
