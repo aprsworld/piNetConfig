@@ -193,7 +193,7 @@ function ip4_mask_address(ip, mask) {
 
 	var i;
 	for (i = 0; i < 4; i++) {
-		ret = ip[i] & mask[i];
+		ret[i] = ip[i] & mask[i];
 	}
 
 	return ret;
@@ -229,9 +229,12 @@ function ip4_validate_network(ip_s, netmask_s, gateway_s) {
 
 	var ip_net = ip4_mask_address(ip, netmask);
 
-	if (gateway_s) {
+	if (gateway) {
 		var gateway_net = ip4_mask_address(gateway, netmask);
 		if (!ip4_compare_address(gateway_net, ip_net)) {
+			return false;
+		}
+		if (ip4_compare_address(gateway, ip)) {
 			return false;
 		}
 	}
@@ -247,6 +250,9 @@ function ip4_validate_network(ip_s, netmask_s, gateway_s) {
 
 	if (netsize >= 24) {
 		if (ip[3] == 0 || ip[3] == 255) {
+			return false;
+		}
+		if (gateway && (gateway[3] == 0 || gateway[3] == 255)) {
 			return false;
 		}
 	}
@@ -457,6 +463,7 @@ $.ajax("current_settings.php", {
 		$ifconfig_table = $('<table border=0>');
 		add_option(config, data, $ifconfig_table, 'hwaddress', 'MAC Address', iface);
 		add_option(config, data, $ifconfig_table, 'mtu', 'MTU', iface);
+		$ifconfig_table.find('input').button('disable');
 		$ifconfig.append($ifconfig_table);
 		$ifconfig.append('<br />');
 

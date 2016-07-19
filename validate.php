@@ -197,6 +197,11 @@ function validate_ip4($ip_s, $netmask_s, $gateway_s) {
 				return false;
 			}
 		}
+
+		// Gateway is not IP
+		if (compare_ip4_address($gateway, $ip)) {
+			return false;
+		}
 	}
 
 	// Gateway and IP are not Broadcast
