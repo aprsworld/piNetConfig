@@ -55,7 +55,7 @@ if (config_validate($config)) {
 	}
 	config_write($config);
 	system($root_ro);
-	system('shutdown -r -t 10 NOW');
+	system('shutdown -r -t 10 now');
 }
 
 ?>
