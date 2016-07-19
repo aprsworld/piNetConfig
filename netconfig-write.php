@@ -2,6 +2,44 @@
 
 require('netconfig.php');
 
+function config_validate ($config) {
+
+	foreach ($config as $iface => $ifconfig) {
+		foreach ($ifconfig['protocol'] as $protocol => $pconfig) {
+			if ($protocol != "inet") {
+				echo 'Warning: Unsupported protocol for ' . $iface . '.\n';
+				continue;
+			}
+			if (!array_key_exists('method', $pconfig)) {
+				echo 'ERROR: No configuration method for ' . $iface . ' ' . $protocol . ' configuration!\n';
+				return false;
+			}
+			$method = $pconfig['method'];
+			if ($method != "static" && $method != "dhcp" && $method != "loopback") {
+				echo "Warning: Unsupported configuration method " . $method . " for " . $iface . " " . $protocol . ".\n";
+			}
+			foreach ($pconfig as $option => $value) {
+				switch ($option) {
+				case 'method':
+					continue;
+				case 'address':
+				case 'netmask':
+				case 'gateway':
+					if ($method != "static") {
+						echo "Warning: " . $option . " specified for " . $method . " configuration of " . $iface . " " . $protocol . " configuration.\n";
+					}
+					break;
+				default:
+					echo "Warning: Unsupported option " . $option . " specified for " . $method . " configuration of " . $iface . " " . $protocol . " configuration.\n";
+					break;
+				}
+			}
+		}
+	}
+
+	return true;
+}
+
 function config_write ($config) {
 	$file = fopen("/tmp/interfaces.txt", "w");
 	if (!$file) {
@@ -43,6 +81,8 @@ function config_write ($config) {
 }
 
 $config = interfaces_read("/etc/network/interfaces");
-config_write($config);
+if (config_validate($config)) {
+	config_write($config);
+}
 
 ?>
