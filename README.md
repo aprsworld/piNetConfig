@@ -8,6 +8,7 @@ The json file is a collection of physical interfaces which then have the nested 
 
 In the root level of each physical interface object there are all the link level parameters such as the mtu, mac address, etc.  The link level statistics such as packets and bytes sent and received will be added in the future.  Any members that are objects are virtual interfaces (at this time they are all named starting with the name of the physical interface).  This contains there current settings of each virtual interface with each networking protocol settings being contained in the protocol and then the appropriate protocol (inet, inet6, etc) objects.  The config object is a pretty closing mapping of the /etc/network/interfaces file of debian.  An example of a standard one ipv4 ethernet interfaces is below:
 
+...
 { "eth0": {
   "mtu": "1500",
   "hwaddress": "XX:XX:XX:XX:XX:XX",
@@ -35,6 +36,7 @@ In the root level of each physical interface object there are all the link level
    }
    ...
 }
+...
 
 ## validate.php
 
