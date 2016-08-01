@@ -1,14 +1,15 @@
 #!/usr/bin/php5
 <?php
 
-$root_rw = "/usr/local/sbin/root-rw";
-$root_ro = "/usr/local/sbin/root-ro";
+$root_rw = "sudo /usr/local/sbin/root-rw";
+$root_ro = "sudo /usr/local/sbin/root-ro";
+$reboot = "sudo /sbin/shutdown -r -t 1 now";
 
 require('netconfig.php');
 require('validate.php');
 
-function config_write ($config) {
-	$file = fopen("/tmp/interfaces.txt", "w");
+function config_write ($config, $file) {
+	$file = fopen($file, "w");
 	if (!$file) {
 		return false;
 	}
@@ -45,17 +46,33 @@ function config_write ($config) {
 	}
 
 	fclose($file);
+	return true;
 }
 
 $config = interfaces_read("/etc/network/interfaces");
 if (config_validate($config)) {
+	if (!config_write($config, "/tmp/interfaces")) {
+		echo "ERROR: Couldn't write temporary config file!\n";
+		return 1;
+	}
+	if (system('/bin/chmod 644 /tmp/interfaces')) {
+		echo "ERROR: Couldn't set permissions to temporary config file!\n";
+		return 1;
+	}
+	if (system('sudo /bin/chown root:root /tmp/interfaces')) {
+		echo "ERROR: Couldn't set temporary config file owner to root!\n";
+		return 1;
 	if (system($root_rw)) {
 		echo "ERROR: Couldn't make filesystem writable!\n";
 		return 1;
 	}
-	config_write($config);
+	if (system('sudo mv /tmp/interfaces /etc/config/interfaces')) {
+		system($root_ro);
+		echo "ERROR: Couldn't move temporary config file to perminent location!\n";
+		return 1;
+	}
 	system($root_ro);
-	system('shutdown -r -t 10 now');
+	system($reboot);
 }
 
 ?>
