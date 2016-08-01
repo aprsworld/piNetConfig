@@ -1,0 +1,13 @@
+net.html:
+	Show Existing Interfaces AND Configured Interfaces
+	Add Aliases
+	Error class propagation error. (Works every other time)
+	Validation on method change.
+	"advanced" options.
+
+Make single web-interface .php file for getting and setting configuration and values.
+Handle source and source-directory in configuration parsing.
+Wireless...
+Current Settings clean-up:
+	"brd" -> "broadcast"
+	Wireless...
