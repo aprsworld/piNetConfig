@@ -1,6 +1,4 @@
-#!/usr/bin/php5
 <?php
-
 $root_rw = "sudo /usr/local/sbin/root-rw";
 $root_ro = "sudo /usr/local/sbin/root-ro";
 $reboot = "sudo /sbin/shutdown -r -t 1 now";
@@ -49,7 +47,8 @@ function config_write ($config, $file) {
 	return true;
 }
 
-$config = interfaces_read("/etc/network/interfaces");
+# $config = interfaces_read("/etc/network/interfaces");
+$config = json_decode(file_get_contents('php://input'), true);
 if (config_validate($config)) {
 	if (!config_write($config, "/tmp/interfaces")) {
 		echo "ERROR: Couldn't write temporary config file!\n";
@@ -62,6 +61,7 @@ if (config_validate($config)) {
 	if (system('sudo /bin/chown root:root /tmp/interfaces')) {
 		echo "ERROR: Couldn't set temporary config file owner to root!\n";
 		return 1;
+	}
 	if (system($root_rw)) {
 		echo "ERROR: Couldn't make filesystem writable!\n";
 		return 1;
@@ -75,4 +75,5 @@ if (config_validate($config)) {
 	system($reboot);
 }
 
+echo json_encode($config);
 ?>
