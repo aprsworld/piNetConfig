@@ -5,7 +5,6 @@ net.html:
 	Validation on method change.
 	"advanced" options.
 
-Make single web-interface .php file for getting and setting configuration and values.
 Wireless...
 Current Settings clean-up:
 	"brd" -> "broadcast"

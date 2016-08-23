@@ -1,6 +1,4 @@
 <?php
-require('validate.php');
-require('netconfig.php');
 
 // Parse iwconfig output
 // TODO XXX
@@ -177,33 +175,4 @@ function ip_parse_address($s) {
 
 	return $ret;
 }
-
-	$iwconfig_output = shell_exec("/sbin/iwconfig 2> /dev/null");
-	if ($iwconfig_output == NULL) {
-		$iwconfig = Array();
-	} else {
-		$iwconfig = iwconfig_parse($iwconfig_output);
-	}
-
-	$ip_output = shell_exec("/sbin/ip -o -f inet link 2> /dev/null");
-	if ($ip_output == NULL) {
-		exit(-1);
-	}
-	$ip_link = ip_parse_link($ip_output);
-
-	$ip_output = shell_exec("/sbin/ip -o -f inet route 2> /dev/null");
-	if ($ip_output == NULL) {
-		exit(-1);
-	}
-	$ip_route = ip_parse_route($ip_output);
-	
-	$ip_output = shell_exec("/sbin/ip -o -f inet addr 2> /dev/null");
-	if ($ip_output == NULL) {
-		exit(-1);
-	}
-	$ip = ip_parse_address($ip_output);
-
-	$config = array_merge_recursive($ip_link, $ip_route, $ip, $iwconfig);
-	$config['config'] = interfaces_read("/etc/network/interfaces");
-	echo json_encode($config);
 ?>
