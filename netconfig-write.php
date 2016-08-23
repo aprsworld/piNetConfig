@@ -54,7 +54,7 @@ if (config_validate($config)) {
 		echo "ERROR: Couldn't write temporary config file!\n";
 		return 1;
 	}
-	if (!system('/bin/chmod 644 /tmp/interfaces')) {
+	if (!system('sudo /bin/chmod 644 /tmp/interfaces')) {
 		echo "ERROR: Couldn't set permissions to temporary config file!\n";
 		return 1;
 	}
