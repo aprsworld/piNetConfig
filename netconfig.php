@@ -1,19 +1,25 @@
 <?php
 
 function config_add(&$config, $iface, $family, $option, $value) {
-	// Iface doesn't exist
-	if (!array_key_exists($iface, $config)) {
-		$config[$iface] = Array();
-	}
-	$block =& $config[$iface];
-	if ($family) {
-		if (!array_key_exists('protocol', $block)) {
-			$block['protocol'] = Array();
-			$block['protocol'][$family] = Array();
-		} else if (!array_key_exists($family, $block['protocol'])) {
-			$block['protocol'][$family] = Array();
+	if (!$iface) {	// Global Option
+		$block =& $config;
+	} else {  // Iface Option
+		// Iface doesn't exist
+		if (!array_key_exists($iface, $config)) {
+			$config[$iface] = Array();
 		}
-		$block =& $block['protocol'][$family];
+		$block =& $config[$iface];
+		// Protocol Option
+		// XXX TODO: Multiple Protocol Definitions
+		if ($family) {
+			if (!array_key_exists('protocol', $block)) {
+				$block['protocol'] = Array();
+				$block['protocol'][$family] = Array();
+			} else if (!array_key_exists($family, $block['protocol'])) {
+				$block['protocol'][$family] = Array();
+			}
+			$block =& $block['protocol'][$family];
+		}
 	}
 
 	// Option already exists
@@ -49,13 +55,24 @@ function interfaces_read($filename) {
 			continue;
 		}
 
-		// Auto
-		if (preg_match("/^auto[\s]+([^\s]+)$/", $clean_line, $matches)) {
-			config_add($config, $matches[1], NULL, "auto", true);
+		// Source
+		if (preg_match("/^source(-directory)?[\s]+([^\s]+)$/", $clean_line, $matches)) {
+			print "BOOM!";
+			if ($matches[1]) {
+				config_add($config, NULL, NULL, "source-directory", $matches[2]);
+			} else {
+				config_add($config, NULL, NULL, "source", $matches[2]);
+			}
 			continue;
 		}
 
-		// Allow (-hotplug)
+		// Auto (Alias for allow-auto)
+		if (preg_match("/^auto[\s]+([^\s]+)$/", $clean_line, $matches)) {
+			config_add($config, $matches[1], NULL, "allow", "auto");
+			continue;
+		}
+
+		// Allow (-auto, -hotplug, ...)
 		if (preg_match("/^allow-([^\s]+)[\s]+([^\s]+)$/", $clean_line, $matches)) {
 			// TODO
 			config_add($config, $matches[2], NULL, "allow", $matches[1]);
