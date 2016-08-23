@@ -54,20 +54,20 @@ if (config_validate($config)) {
 		echo "ERROR: Couldn't write temporary config file!\n";
 		return 1;
 	}
-	if (system('/bin/chmod 644 /tmp/interfaces')) {
+	if (!system('/bin/chmod 644 /tmp/interfaces')) {
 		echo "ERROR: Couldn't set permissions to temporary config file!\n";
 		return 1;
 	}
-	if (system('sudo /bin/chown root:root /tmp/interfaces')) {
+	if (!system('sudo /bin/chown root:root /tmp/interfaces')) {
 		echo "ERROR: Couldn't set temporary config file owner to root!\n";
 		return 1;
 	}
-	if (system($root_rw)) {
+	if (!system($root_rw)) {
 		echo "ERROR: Couldn't make filesystem writable!\n";
 		return 1;
 	}
-	if (system('sudo mv /tmp/interfaces /etc/config/interfaces')) {
-		system($root_ro);
+	if (!system('sudo mv /tmp/interfaces /etc/config/interfaces')) {
+		!system($root_ro);
 		echo "ERROR: Couldn't move temporary config file to perminent location!\n";
 		return 1;
 	}
