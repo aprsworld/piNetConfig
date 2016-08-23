@@ -1,8 +1,12 @@
 <?php
-//$root_rw = "sudo /usr/local/sbin/root-rw";
-//$root_ro = "sudo /usr/local/sbin/root-ro";
-$root_rw = "echo yay";
-$root_ro = "echo yay";
+
+if (file_exists('/usr/local/sbin/root-rw') && file_exists('/usr/local/sbin/root-ro')) {
+	$root_rw = "sudo /usr/local/sbin/root-rw";
+	$root_ro = "sudo /usr/local/sbin/root-ro";
+} else {
+	$root_rw = "echo yay > /dev/null";
+	$root_ro = "echo yay > /dev/null";
+}
 $reboot = "sudo /sbin/shutdown -r -t 1 now";
 
 require('netconfig.php');
