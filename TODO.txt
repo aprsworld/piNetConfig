@@ -6,7 +6,6 @@ net.html:
 	"advanced" options.
 
 Make single web-interface .php file for getting and setting configuration and values.
-Handle source and source-directory in configuration parsing.
 Wireless...
 Current Settings clean-up:
 	"brd" -> "broadcast"
