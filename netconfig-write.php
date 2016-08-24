@@ -150,6 +150,9 @@ function netconfig_write($config) {
 		}
 		system($root_ro);
 		system($reboot);
+	} else {
+		echo "Invalid Config!";
+		return false;
 	}
 	
 	echo json_encode($config);

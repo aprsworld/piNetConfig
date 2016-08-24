@@ -6,7 +6,7 @@ require('netconfig-read.php');
 
 $config = json_decode(file_get_contents('php://input'), true);
 if ($config) {
-	return config_write($config);
+	return netconfig_write($config['config']);
 } else {
 	$iwconfig_output = shell_exec("/sbin/iwconfig 2> /dev/null");
 	if ($iwconfig_output == NULL) {
