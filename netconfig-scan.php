@@ -12,6 +12,7 @@ function iwlist_parse_scan ($s) {
 		foreach ($scans as $scan) {
 			$ssid = NULL;
 			$auth = NULL;
+			$key_mgmt = NULL;
 			preg_match('/ESSID:"([\w]+)"/', $scan, $matches);
 			if (sizeof($matches) > 0) {
 				$ssid = $matches[1];
@@ -24,13 +25,26 @@ function iwlist_parse_scan ($s) {
 			} else {
 				$auth = false;
 			}
-			// TODO: Encryption and Authentication info...
+
+			// XXX: TODO: Encryption and Authentication info...
+			if ($auth) {
+				if (preg_match('/WPA2/', $scan)) {
+					$auth = 'WPA2';
+				} else if (preg_match('/WPA/', $scan)) {
+					$auth = 'WPA';
+				} else {
+					$auth = 'WEP';
+				}
+			}
 
 			if (!array_key_exists($iface, $ret)) {
 				$ret[$iface] = Array();
 			}
 			$ret[$iface][$ssid] = Array();
 			$ret[$iface][$ssid]['auth'] = $auth;
+			if ($key_mgmt) {
+				$ret[$iface][$ssid]['key_mgmt'] = $key_mgmt;
+			}
 		}
 	}
 
