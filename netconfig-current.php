@@ -151,6 +151,9 @@ function ip_parse_address($s) {
 		if ($alias == "") {
 			$alias = $interface;
 		}
+		if ($split0[sizeof($split0)-2] == "secondary") {
+			$alias = $alias . '-secondary'; // XXX: Cludge
+		}
 		$family = $split0[1];
 		$net = split("/", $split0[2], 2);
 		$address = $net[0];
