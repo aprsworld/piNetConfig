@@ -1,0 +1,130 @@
+<html>
+<head>
+<title>Network Configuration</title>
+<link rel="stylesheet" href="res/jquery-ui-1.11.4.custom/jquery-ui.min.css" />
+<script src="res/jquery-2.2.4.min.js"></script>
+<script src="res/jquery-ui-1.11.4.custom/jquery-ui.min.js"></script>
+<script src="js/validate-ip4.js"></script>
+<script src="js/ix.js"></script>
+<style>
+label {
+	width: 100%;
+}
+.ui-textfield {
+	font:		inherit;
+	color:		inherit;
+	background:	none;
+	background-color:	#FFF !important;
+	text-align:	inherit;
+	outline:	none;
+	cursor:		text;
+}
+.ui-state-focus, .ui-state-focus > a {
+	outline:		none !important;
+}
+.ui-selectmenu-button {
+	background-color:	#007FFF !important;
+	border-color:		#003ECF !important;
+	color:			#FFF !important;
+}
+.ui_changed {
+	background-color:	#7FCF7F !important;
+	border-color:		#7F7F7F !important;
+	color:			#000 !important;
+}
+.ui_changed.ui-state-active, .ui_changed.ui-selectmenu-button {
+	background-color:	#007F00 !important;
+	border-color:		#003E00 !important;
+	color:			#FFF !important;
+}
+.ui_error {
+	background-color:	#FFCFCF !important;
+	border-color:		#7F7F7F !important;
+	color:			#000 !important;
+}
+.ui_error.ui-state-active, .ui_error.ui-selectmenu-button {
+	background-color:	#7F0000 !important;
+	border-color:		#3E0000 !important;
+	color:			#FFF !important;
+}
+</style>
+</head>
+
+<body>
+<h1 style="float: left;">Network Configuration</h1>
+
+<div style="float: right;" id="buttons">
+<input id="reset" type="button" name="reset" value="Reset"></input>
+<input id="update" type="button" name="update" value="Update"></input>
+</div>
+
+<div style="clear: both;" id="interfaces">
+<ul></ul>
+</div>
+
+<script>
+$("#update").prop('disabled', true);
+$("input:button").button();
+$("#reset").click(function (event) {
+	location.reload();
+});
+$("#update").click(function (event) {
+	var config = {};
+	$(".interface").each(function (index, el) {
+		var iface = $(this).attr('id').substring(10);
+		config[iface] = {
+			mtu: $(this).find('input[name="mtu"]').first().val()
+		};
+		$(this).find('.alias').each(function (index, el) {
+			var alias = $(this).attr('id').substring(iface.length + 11);
+			if (alias != iface) {
+				config[alias] = {};
+			}
+			config[alias].inet = {};
+			$(this).find('input[type=text]').each(function (index, el) {
+				if ($(this).prop('disabled')) {
+					return;
+				}
+				var option = $(this).prop('name');
+				var value = $(this).val();
+				if (value.trim() == "" || value == "undefined") {
+					return;
+				}
+				if (config[alias].inet[option] != undefined) {
+					if ($.isArray(config[alias].inet[option])) {
+						config[alias].inet[option].push(value);
+					} else {
+						config[alias].inet[option] = [ config[alias].inet[option], value ];
+					}
+				} else {
+					config[alias].inet[option] = value;
+				}
+			});
+		});
+	});
+	alert(JSON.stringify(config));
+});
+
+
+$.ajax("netconfig.php", {
+	context:	this,
+	cache:		false,
+	dataType:	'json',
+	ifModified:	true,
+	headers:	{}
+}).done(function (data, status, XHR) {
+	var config = data.config;
+	delete data.config;
+	var ifaces = {};
+	var $tabs = $("#interfaces");
+	for (var iface in data) {
+		ifaces[iface] = ix_iface_add($tabs, iface, data[iface], config);
+	}
+	$("#interfaces").tabs();
+	$('#update').button('enable');
+}).fail(function (XHR, status, error) {
+	alert("Failed to get configuration information!");
+});
+</script>
+</body>
+</html>
