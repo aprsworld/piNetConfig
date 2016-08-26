@@ -120,7 +120,7 @@ function netconfig_write($config) {
 		$root_rw = "echo yay > /dev/null";
 		$root_ro = "echo yay > /dev/null";
 	}
-	$reboot = "sudo /sbin/shutdown -r -t 1 now";
+	$reboot = "nohup sudo /sbin/shutdown -r -t 10 now > /dev/null 2>&1 &";
 	
 	if (config_validate($config)) {
 		if (!config_write($config, "/tmp/interfaces")) {
