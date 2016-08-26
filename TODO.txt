@@ -17,5 +17,5 @@ Documentation...
 
 Current Settings naming clean-up:
 	"brd" -> "broadcast"
-	`ip addr` (secondary) blocks
+	`ip addr` (secondary) blocks... Again, I love lack of documents. :<
 	Wireless block...
