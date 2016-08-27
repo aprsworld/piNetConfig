@@ -102,3 +102,15 @@ As wpa-supplicant is used for wireless configuration it's block should look like
 
 'method' can also be static (or anything else).  'wpa-ssid' is obviously the ssid of the network to connect to.  'wpa-key-mgmt' is either 'WPA-PSK' for standard WPA/WPA2 secured networks or 'NONE' for an open access point.
 
+For WEP wireless encryption the 'wireless-tools' are used and documentation is available in '/usr/share/doc/wireless-tools'.  It's configuration block should look like:
+
+```
+... "inet": {
+	"method": "dhcp",
+	"wireless-essid": ...,
+	"wireless-key1": ...,
+	...
+```
+
+Where 'wireless-essid' is the wireless network name and 'wireless-key1' is the hexidecimal key for WEP.  You can replace 1 with 2, 3, or 4 to enter those keys if desired.
+
