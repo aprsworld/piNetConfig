@@ -277,6 +277,10 @@ $.ajax("netconfig.php", {
 		$ifconfig_aliases = $('<div class="config-interface"></div>');
 		$ifconfig.append($ifconfig_aliases);
 		for (var alias in data[iface]) {
+			if(alias.endsWith("-secondary")){
+				continue;	
+			}
+			console.log(alias);
 			var inet = data[iface][alias].inet;
 			if (!inet) {
 				continue;
@@ -347,6 +351,7 @@ $.ajax("netconfig.php", {
 */
 	}
 	$("#interfaces").tabs();
+	console.log($('#update').attr("disabled"))
 	$('#update').button('enable');
 }).fail(function (XHR, status, error) {
 	alert("Failed to get configuration information!");
