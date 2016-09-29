@@ -229,7 +229,9 @@ function ui_changed($input) {
 	}
 	$iface_widget.addClass("ui_changed");
 }
-
+/* config = config object from json, data = current settings from json, $table is the html element that holds everything,
+// option = address, netmask, etc. , title = human readable title for option, iface = interface we are workign with
+   alias = ex: eth0:0 */
 function add_option(config, data, $table, option, title, iface, alias) {
 	var option_id = 'config-' + iface + '-' + (alias ? alias + '-' + option : option);
 	var available = true;
@@ -251,6 +253,7 @@ function add_option(config, data, $table, option, title, iface, alias) {
 
 	var $tr = $('<tr>');
 	var $label = $('<label for="'+option_id+'-set">'+title+'</label>');
+	// hidden checkbox that determines whether or not the input is shown
 	var $checkbox = $('<input id="'+option_id+'-set" type="checkbox" name="'+option+'"'+checked+'></input>');
 	$checkbox.prop('disabled', !available);
 	var $th = $('<th></th>').append($label).append($checkbox);
@@ -283,14 +286,22 @@ $.ajax("netconfig.php", {
 	var config = data.config;
 	delete data.config;
 	for (var iface in data) {
+		// Create what will become the tabs for each interface at the top of the screen
 		var $li = $('<li><a href="#interface-' + iface + '">' + iface + '</a></li>');
 		$('#interfaces ul').append($li);
 		var $ifconfig = $('<div class="interface"></div>');
 		$('#interfaces').append($ifconfig);
 		$ifconfig.attr('id', 'interface-' + iface);
 		$ifconfig_table = $('<table border=0>');
+		// Add global options above the individual ifaces
 		add_option(config, data, $ifconfig_table, 'hwaddress', 'MAC Address', iface);
 		add_option(config, data, $ifconfig_table, 'mtu', 'MTU', iface);
+
+		if(iface.startsWith("wlan")){
+			add_option(config, data, $ifconfig_table, 'wpa-ssid', 'WiFi SSID', iface);
+			add_option(config, data, $ifconfig_table, 'wpa-psk', 'WiFi Password', iface);
+		}
+		// set each button to "disabled"
 		$ifconfig_table.find('input').button('disable');
 		$ifconfig.append($ifconfig_table);
 		$ifconfig.append('<br />');
@@ -298,6 +309,7 @@ $.ajax("netconfig.php", {
 		$ifconfig_aliases = $('<div class="config-interface"></div>');
 		$ifconfig.append($ifconfig_aliases);
 		for (var alias in data[iface]) {
+			//Exclude wierd secondary ip addresses
 			if(alias.endsWith("-secondary")){
 				continue;
 			}
@@ -307,17 +319,18 @@ $.ajax("netconfig.php", {
 				continue;
 			}
 			var inet_config;
+			// Default to DHCP if we do not see our iface within the config
 			if (config[alias] == undefined){
 				inet_config = {"method": "dhcp"};
 
 			}
 			else{
 		 		inet_config = config[alias].protocol.inet;
-
 			}
 			console.log(alias)
 			var $alconfig = $('<div class="alias"></div>');
 			$alconfig.attr('id', 'interface-' + iface + '-' + alias);
+			// create the selection menu that will become our jqueryui combobox
 			var $config_select = $('<select name="method"></select>');
 			if (inet_config.method == "dhcp" || inet_config.method == "static") {
 				$config_select.append('<option value="dhcp">DHCP</option>');
@@ -325,12 +338,14 @@ $.ajax("netconfig.php", {
 			} else {
 				$config_select.append('<option>'+inet_config.method+'</option>');
 			}
+			// set the value of our select menu and keep track of what it was originally
 			$config_select.val(inet_config.method);
 			$config_select.data('value_orig', inet_config.method);
 			$alconfig.append($config_select);
+			// create jquery combobox
 			$config_select.selectmenu({
 				width: 192,
-				change: function (ev) {
+				change: function (ev) { //event handler for changing values on select
 					if ($(this).val() == 'static') {
 						$(this).data('$inputs').filter('input[type=checkbox]').button('enable');
 					} else {
