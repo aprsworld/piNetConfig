@@ -109,7 +109,7 @@ $("#update").click(function (event) {
 	var finalConfig = JSON.stringify({"config": config});
 	console.log(finalConfig);
 	alert(finalConfig);
-	$.ajax({	
+	$.ajax({
 			url: "netconfig.php",
 			type: 'post',
 			dataType: 'JSON',
@@ -299,14 +299,23 @@ $.ajax("netconfig.php", {
 		$ifconfig.append($ifconfig_aliases);
 		for (var alias in data[iface]) {
 			if(alias.endsWith("-secondary")){
-				continue;	
+				continue;
 			}
 			console.log(alias);
 			var inet = data[iface][alias].inet;
 			if (!inet) {
 				continue;
 			}
-			var inet_config = config[alias].protocol.inet;
+			var inet_config;
+			if (config[alias] == undefined){
+				inet_config = {"method": "dhcp"};
+
+			}
+			else{
+		 		inet_config = config[alias].protocol.inet;
+
+			}
+			console.log(alias)
 			var $alconfig = $('<div class="alias"></div>');
 			$alconfig.attr('id', 'interface-' + iface + '-' + alias);
 			var $config_select = $('<select name="method"></select>');
