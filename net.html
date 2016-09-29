@@ -229,8 +229,103 @@ function ui_changed($input) {
 	}
 	$iface_widget.addClass("ui_changed");
 }
+
+function determine_wifi_options(config, data, $table, iface, alias, $alconfig) {
+	var available = false;
+	if (alias && config[alias] && config[alias].protocol && config[alias].protocol.inet){
+		available = true;
+	}
+	var securityType = "none";
+	if(available && config[alias].protocol.inet.hasOwnProperty('wpa-ssid')){
+		securityType = "wpa2";
+		console.log(securityType);
+		add_ssid_option(config, data, $table, 'wpa-ssid', 'SSID', iface, alias, false);
+		add_ssid_option(config, data, $table, 'wpa-psk', 'Pass Key', iface, false);
+
+	}
+	else if(available && config[alias].protocol.inet.hasOwnProperty('wireless-ssid')){
+		securityType = "wep";
+		console.log(securityType);
+		add_ssid_option(config, data, $table, 'wireless-ssid', 'SSID', iface, alias, false);
+		add_ssid_option(config, data, $table, 'wireless-key', 'Pass Key', iface, alias, false);
+
+	}
+	else{
+		console.log(securityType);
+		add_ssid_option(config, data, $table, 'wireless-ssid', 'SSID', iface, alias, false);
+		add_ssid_option(config, data, $table, 'wireless-key', 'Pass Key', iface, alias, true);
+	}
+	var $config_select = $('<select name="security"></select>');
+	$config_select.append('<option value="none">None</option>');
+	$config_select.append('<option value="wep">WEP</option>');
+	$config_select.append('<option value="wpa">WPA</option>');
+	$config_select.append('<option value="wpa2">WPA2</option>');
+
+	// set the value of our select menu and keep track of what it was originally
+	$config_select.val(securityType);
+	$config_select.data('value_orig', securityType);
+	$alconfig.append($config_select);
+	// create jquery combobox
+	$config_select.selectmenu({
+		width: 192,
+		change: function (ev) { //event handler for changing values on select
+			console.log($(this).data('$inputs'));
+			var that = $(this);
+			if ($(this).val() == 'none') {
+				console.log($(this).data('$inputs'));
+				//$(this).data('$inputs').filter(':input[type=checkbox]').button('enable');
+				$(this).data('$inputs').each(function(index){
+					var newid = $(this).attr('id');
+					newid = newid.replace("wpa-psk", "wireless-key").replace("wpa-ssid", "wireless-ssid");
+					var newname = $(this).attr('name');
+					newname = newname.replace("wpa-psk", "wireless-key").replace("wpa-ssid", "wireless-ssid");
+					$(this).attr('id', newid);
+					$(this).attr('name', newname);
+					console.log(newid);
+					console.log(newname);
+				});
+
+			} else if($(this).val() == 'wep') {
+				//$(this).data('$inputs').filter('input[type=checkbox]').button('disable');
+				$(this).data('$inputs').each(function(index){
+					var newid = $(this).attr('id');
+					newid = newid.replace("wpa-psk", "wireless-key").replace("wpa-ssid", "wireless-ssid");
+					var newname = $(this).attr('name');
+					newname = newname.replace("wpa-psk", "wireless-key").replace("wpa-ssid", "wireless-ssid");
+					$(this).attr('id', newid);
+					$(this).attr('name', newname);
+					console.log(newid);
+					console.log(newname);
+				});
+
+			} else if($(this).val() == 'wpa' || ($(this).val() == 'wpa2')) {
+				console.log(	$(this).data());
+				$(this).data('$inputs').each(function(index){
+					var newid = $(this).attr('id');
+					newid = newid.replace("wireless-key", "wpa-psk").replace("wireless-ssid", "wpa-ssid");
+					var newname = $(this).attr('name');
+					newname = newname.replace("wireless-key", "wpa-psk").replace("wireless-ssid", "wpa-ssid");
+					$(this).attr('id', newid);
+					$(this).attr('name', newname);
+					console.log(newid);
+					console.log(newname);
+				});
+
+			}
+			console.log($(this).data('$inputs'));
+			$(this).data('$inputs').filter('input[type=checkbox]').each(function (ev) {
+				ui_changed($(this).data('$input'));
+			});
+			ui_changed($(this));
+		}
+	});
+	$config_select.data('$inputs', $table.find('input'));
+
+
+}
+
 /* config = config object from json, data = current settings from json, $table is the html element that holds everything,
-// option = address, netmask, etc. , title = human readable title for option, iface = interface we are workign with
+   option = address, netmask, etc. , title = human readable title for option, iface = interface we are workign with
    alias = ex: eth0:0 */
 function add_option(config, data, $table, option, title, iface, alias) {
 	var option_id = 'config-' + iface + '-' + (alias ? alias + '-' + option : option);
@@ -275,6 +370,48 @@ function add_option(config, data, $table, option, title, iface, alias) {
 	$table.append($tr);
 }
 
+function add_ssid_option(config, data, $table, option, title, iface, alias, disabled){
+	var option_id = 'config-' + iface + '-' + (alias ? alias + '-' + option : option);
+	var config_value = null;
+	if (alias && config[alias] && config[alias].protocol && config[alias].protocol.inet) {
+		config_value = config[alias].protocol.inet[option];
+	} else if (config[iface]) {
+		config_value = config[iface][option];
+	}
+	var checked = (config_value) ? " checked" : "";
+	var disabled = (config_value) ? "" : " disabled";
+	console.log(data)
+	console.log(iface)
+	console.log(alias)
+
+	var value = (config_value) ? config_value : (alias) ? data[iface][alias].inet[option] : data[iface][option];
+	if (value === null || value == undefined) {
+		value = "";
+	}
+
+	var $tr = $('<tr>');
+	var $label = $('<label for="'+option_id+'-set">'+title+'</label>');
+	// hidden checkbox that determines whether or not the input is shown
+	var $checkbox = $('<input id="'+option_id+'-set" type="checkbox" name="'+option+'"'+checked+'></input>');
+	$checkbox.prop('disabled', disabled);
+	var $th = $('<th></th>').append($label).append($checkbox);
+	$tr.append($th);
+	var $input = $('<input type="text" id="'+option_id+'" name="'+option+'" value="'+value+'"'+disabled+'></input>');
+	var $td = $('<td></td>').append($input);
+	$tr.append($td);
+
+	$checkbox.data('$input', $input);
+	$input.data('value_orig', config_value);
+	$input.data('$label', $label);
+	$input.data('$checkbox', $checkbox);
+	$input.button().addClass('ui-textfield').off('mouseenter').off('mousedown').off('keydown').bind('propertychange change keyup click keyup input paste', function(ev) {
+		ui_changed($(this));
+	});
+	$checkbox.button().bind('click change keyup propertychange input', function(ev) {
+		ui_changed($(this).data('$input'));
+	});
+	$table.append($tr);
+}
 
 $.ajax("netconfig.php", {
 	context:	this,
@@ -297,10 +434,6 @@ $.ajax("netconfig.php", {
 		add_option(config, data, $ifconfig_table, 'hwaddress', 'MAC Address', iface);
 		add_option(config, data, $ifconfig_table, 'mtu', 'MTU', iface);
 
-		if(iface.startsWith("wlan")){
-			add_option(config, data, $ifconfig_table, 'wpa-ssid', 'WiFi SSID', iface);
-			add_option(config, data, $ifconfig_table, 'wpa-psk', 'WiFi Password', iface);
-		}
 		// set each button to "disabled"
 		$ifconfig_table.find('input').button('disable');
 		$ifconfig.append($ifconfig_table);
@@ -358,14 +491,20 @@ $.ajax("netconfig.php", {
 				}
 			});
 			var $alias_table = $('<table border="0"></table>');
+			var $ssid_table = $('<table border="0"></table>');
 			//add_option(config, data, $alias_table, 'hostname', 'Hostname', iface, alias);
 			add_option(config, data, $alias_table, 'address', 'Address', iface, alias);
 			add_option(config, data, $alias_table, 'netmask', 'Netmask', iface, alias);
 			//add_option(config, data, $alias_table, 'pointopoint', 'Point to Point', iface, alias);
 			add_option(config, data, $alias_table, 'gateway', 'Gateway', iface, alias);
+
 			//add_option(config, data, $alias_table, 'metric', 'Metric', iface, alias);
 			//add_option(config, data, $alias_table, 'nameserver', 'Nameserver', iface, alias);
 			$alconfig.append($alias_table);
+			if(iface.startsWith("wlan")){
+				determine_wifi_options(config, data, $ssid_table, iface, alias, $alconfig);
+			}
+			$alconfig.append($ssid_table);
 			$config_select.data('$inputs', $alias_table.find('input'));
 			var $alias_widget = $('<h3>' + alias + '</h3>');
 			$ifconfig_aliases.append($alias_widget);
