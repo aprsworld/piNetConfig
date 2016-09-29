@@ -80,7 +80,7 @@ $("#update").click(function (event) {
 				config[alias] = {};
 			}
 			config[alias].inet = {};
-			var method = $(this).find('.ui-selectmenu-button').children('.ui-selectmenu-text').text().toLowerCase();
+			var method = $(this).next('.ui-selectmenu-button').children('.ui-selectmenu-text').text().toLowerCase();
 			if(method != undefined){
 				config[alias].inet["method"] = method;
 			}
