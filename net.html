@@ -109,7 +109,7 @@ $("#update").click(function (event) {
 	var finalConfig = JSON.stringify({"config": config});
 	console.log(finalConfig);
 	alert(finalConfig);
-	$.ajax({
+	/*$.ajax({
 			url: "netconfig.php",
 			type: 'post',
 			dataType: 'JSON',
@@ -122,7 +122,7 @@ $("#update").click(function (event) {
 			error: function (error) {
 				console.log("error");
 			}
-	});
+	});*/
 });
 
 function ui_changed($input) {
@@ -281,10 +281,13 @@ function determine_wifi_options(config, data, $table, iface, alias, $alconfig) {
 					newname = newname.replace("wpa-psk", "wireless-key").replace("wpa-ssid", "wireless-ssid");
 					$(this).attr('id', newid);
 					$(this).attr('name', newname);
+
 					console.log(newid);
 					console.log(newname);
 				});
-
+				$(this).data('$inputs').filter('input[type=checkbox]').button('enable');
+				var pass = $(this).data('$inputs').filter('input[type=checkbox]').filter('input[name*="wireless-key"]');
+				pass.button('disable');
 			} else if($(this).val() == 'wep') {
 				//$(this).data('$inputs').filter('input[type=checkbox]').button('disable');
 				$(this).data('$inputs').each(function(index){
@@ -310,7 +313,7 @@ function determine_wifi_options(config, data, $table, iface, alias, $alconfig) {
 					console.log(newid);
 					console.log(newname);
 				});
-
+				$(this).data('$inputs').filter('input[type=checkbox]').button('enable');
 			}
 			console.log($(this).data('$inputs'));
 			$(this).data('$inputs').filter('input[type=checkbox]').each(function (ev) {
@@ -379,7 +382,7 @@ function add_ssid_option(config, data, $table, option, title, iface, alias, disa
 		config_value = config[iface][option];
 	}
 	var checked = (config_value) ? " checked" : "";
-	var disabled = (config_value) ? "" : " disabled";
+	//var disabled = (config_value) ? "" : " disabled";
 	console.log(data)
 	console.log(iface)
 	console.log(alias)
