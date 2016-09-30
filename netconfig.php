@@ -6,6 +6,8 @@ require('netconfig-read.php');
 
 $config = json_decode(file_get_contents('php://input'), true);
 if ($config) {
+	//echo json_encode($config);
+
 	return netconfig_write($config['config']);
 } else {
 	$iwconfig_output = shell_exec("/sbin/iwconfig 2> /dev/null");
@@ -26,7 +28,7 @@ if ($config) {
 		exit(-1);
 	}
 	$ip_route = ip_parse_route($ip_output);
-	
+
 	$ip_output = shell_exec("/sbin/ip -o -f inet addr 2> /dev/null");
 	if ($ip_output == NULL) {
 		exit(-1);

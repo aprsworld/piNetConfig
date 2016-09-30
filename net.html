@@ -499,6 +499,7 @@ $.ajax("netconfig.php", {
 
 		$ifconfig_aliases = $('<div class="config-interface"></div>');
 		$ifconfig.append($ifconfig_aliases);
+		var counter = 0;
 		for (var alias in data[iface]) {
 			//Exclude wierd secondary ip addresses
 			if(alias.endsWith("-secondary")){
@@ -509,6 +510,7 @@ $.ajax("netconfig.php", {
 			if (!inet) {
 				continue;
 			}
+			counter++;
 			var inet_config;
 			// Default to DHCP if we do not see our iface within the config
 			if (config[alias] == undefined){
@@ -571,7 +573,50 @@ $.ajax("netconfig.php", {
 			$alconfig.find('input, select').data('$alias', $alconfig)
 					.data('$alias_widget', $alias_widget);
 		}
-		$ifconfig_aliases.accordion();
+		//manuall create the options when the iface is not in the config
+		if(counter == 0){
+			var $config_select = $('<select name="method"></select>');
+			$config_select.append('<option value="dhcp">DHCP</option>');
+			$config_select.append('<option value="static">Static</option>');
+			$config_select.val('dhcp');
+			$config_select.data('value_orig', 'dhcp');
+			$alconfig.append('<h3> Addressing Options </h3>');
+			$alconfig.append($config_select);
+			// create jquery combobox
+			$config_select.selectmenu({
+				width: 192,
+				change: function (ev) { //event handler for changing values on select
+					if ($(this).val() == 'static') {
+						$(this).data('$inputs').filter('input[type=checkbox]').button('enable');
+					} else {
+						$(this).data('$inputs').filter('input[type=checkbox]').button('disable');
+					}
+					$(this).data('$inputs').filter('input[type=checkbox]').each(function (ev) {
+						ui_changed($(this).data('$input'));
+					});
+					ui_changed($(this));
+				}
+			});
+			var $alias_table = $('<table border="0"></table>');
+			var $ssid_table = $('<table border="0"></table>');
+			//add_option(config, data, $alias_table, 'hostname', 'Hostname', iface, alias);
+			add_option(config, data, $alias_table, 'address', 'Address', iface, alias);
+			add_option(config, data, $alias_table, 'netmask', 'Netmask', iface, alias);
+			//add_option(config, data, $alias_table, 'pointopoint', 'Point to Point', iface, alias);
+			add_option(config, data, $alias_table, 'gateway', 'Gateway', iface, alias);
+			$alconfig.append($alias_table);
+			if(iface.startsWith("wlan")){
+				determine_wifi_options(config, data, $ssid_table, iface, alias, $alconfig);
+			}
+			$alconfig.append($ssid_table);
+			$config_select.data('$inputs', $alias_table.find('input'));
+			var $alias_widget = $('<h3>' + alias + '</h3>');
+			$ifconfig_aliases.append($alias_widget);
+			$ifconfig_aliases.append($alconfig);
+			$alconfig.find('input, select').data('$alias', $alconfig)
+					.data('$alias_widget', $alias_widget);
+		}
+ 		$ifconfig_aliases.accordion();
 		$ifconfig.find('input, select').data('$iface', $ifconfig)
 				.data('$iface_widget', $li);
 /*
