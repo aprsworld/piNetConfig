@@ -132,7 +132,7 @@ $("#update").click(function (event) {
 	var finalConfig = JSON.stringify({config});
 	console.log(finalConfig);
 	alert(finalConfig);
-	/*$.ajax({
+	$.ajax({
 			url: "netconfig.php",
 			type: 'post',
 			dataType: 'JSON',
@@ -145,7 +145,7 @@ $("#update").click(function (event) {
 			error: function (error) {
 				console.log("error");
 			}
-	});*/
+	});
 });
 
 function ui_changed($input) {
