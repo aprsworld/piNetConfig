@@ -88,6 +88,7 @@ $("#update").click(function (event) {
 	var config = {};
 	$(".interface").each(function (index, el) {
 		var iface = $(this).attr('id').substring(10);
+
 		config[iface] = {
 			mtu: $(this).find('input[name="mtu"]').first().val()
 		};
@@ -96,10 +97,18 @@ $("#update").click(function (event) {
 			if (alias != iface) {
 				config[alias] = {};
 			}
-			config[alias].inet = {};
+			if(iface.startsWith("wlan")){
+				config[alias].allow = ["hotplug", "auto"];
+			}
+			else{
+				config[alias].allow = "auto";
+			}
+			config[alias].protocol = {};
+			config[alias].protocol.inet = {};
+
 			var method = $(this).find('.ui-selectmenu-button:first').children('.ui-selectmenu-text').text().toLowerCase();
 			if(method != undefined){
-				config[alias].inet["method"] = method;
+				config[alias].protocol.inet["method"] = method;
 			}
 			$(this).find('input[type=text]').each(function (index, el) {
 				if ($(this).prop('disabled')) {
@@ -113,23 +122,23 @@ $("#update").click(function (event) {
 				// add quotes around wpa-psk value because config requries this
 				if ($(this).attr('name') == 'wpa-psk'){
 					value = "\""+value+"\"";
-					config[alias].inet["wpa-ap-scan"] = "1";
-					config[alias].inet["wpa-scan-ssid"] = "1";
+					config[alias].protocol.inet["wpa-ap-scan"] = "1";
+					config[alias].protocol.inet["wpa-scan-ssid"] = "1";
 				}
-				if (config[alias].inet[option] != undefined) {
+				if (config[alias].protocol.inet[option] != undefined) {
 					if ($.isArray(config[alias].inet[option])) {
-						config[alias].inet[option].push(value);
+						config[alias].protocol.inet[option].push(value);
 					} else {
-						config[alias].inet[option] = [ config[alias].inet[option], value ];
+						config[alias].protocol.inet[option] = [ config[alias].protocol.inet[option], value ];
 					}
 				} else {
-					config[alias].inet[option] = value;
+					config[alias].protocol.inet[option] = value;
 				}
 			});
 		});
 	});
 	console.log(config);
-	var finalConfig = JSON.stringify({config});
+	var finalConfig = JSON.stringify({"config":config});
 	console.log(finalConfig);
 	alert(finalConfig);
 	$.ajax({
@@ -143,7 +152,7 @@ $("#update").click(function (event) {
 				console.log(data);
 			},
 			error: function (error) {
-				console.log("error");
+				console.log(error);
 			}
 	});
 });

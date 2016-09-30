@@ -7,6 +7,7 @@ function config_validate ($config) {
 	}
 
 	foreach ($config as $iface => $ifconfig) {
+		// array as key => value
 		foreach ($ifconfig['protocol'] as $protocol => $pconfig) {
 			if ($protocol != "inet") {
 				echo 'Warning: Unsupported protocol for ' . $iface . '.\n';
@@ -42,7 +43,7 @@ function config_validate ($config) {
 				}
 			}
 			if ($address && $netmask) {
-				if (!validate_ip4($address, $netmask, $gateway)) { 
+				if (!validate_ip4($address, $netmask, $gateway)) {
 					echo "Error: Invalid configuration for " . $iface . " " . $protocol . "!\n";
 					return false;
 				}
@@ -112,7 +113,7 @@ function config_write ($config, $file) {
 
 
 function netconfig_write($config) {
-	
+
 	if (file_exists('/usr/local/sbin/root-rw') && file_exists('/usr/local/sbin/root-ro')) {
 		$root_rw = "sudo /usr/local/sbin/root-rw";
 		$root_ro = "sudo /usr/local/sbin/root-ro";
@@ -121,7 +122,7 @@ function netconfig_write($config) {
 		$root_ro = "echo yay > /dev/null";
 	}
 	$reboot = "nohup sudo /sbin/shutdown -r -t 10 now > /dev/null 2>&1 &";
-	
+
 	if (config_validate($config)) {
 		if (!config_write($config, "/tmp/interfaces")) {
 			echo "ERROR: Couldn't write temporary config file!\n";
@@ -154,7 +155,7 @@ function netconfig_write($config) {
 		echo "Invalid Config!";
 		return false;
 	}
-	
-	echo json_encode($config);
+
+	//echo json_encode($config);
 }
 ?>
