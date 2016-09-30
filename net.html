@@ -106,7 +106,7 @@ $("#update").click(function (event) {
 		});
 	});
 	console.log(config);
-	var finalConfig = JSON.stringify({"config": config});
+	var finalConfig = JSON.stringify({config});
 	console.log(finalConfig);
 	alert(finalConfig);
 	/*$.ajax({
@@ -281,17 +281,23 @@ function determine_wifi_options(config, data, $table, iface, alias, $alconfig) {
 					newname = newname.replace("wpa-psk", "wireless-key").replace("wpa-ssid", "wireless-ssid");
 					$(this).attr('id', newid);
 					$(this).attr('name', newname);
-
 					console.log(newid);
 					console.log(newname);
+					var label = $(this).data('$label');
+					// for some reason a function is required to replace the for attribute value
+					$(label).attr('for', function(i, val) {
+						return val.replace("wpa-psk", "wireless-key").replace("wpa-ssid", "wireless-ssid");
+					});
 				});
 				$(this).data('$inputs').filter('input[type=checkbox]').button('enable');
 				var pass = $(this).data('$inputs').filter('input[type=checkbox]').filter('input[name*="wireless-key"]');
 				pass.button('disable');
 			} else if($(this).val() == 'wep') {
 				//$(this).data('$inputs').filter('input[type=checkbox]').button('disable');
+
 				$(this).data('$inputs').each(function(index){
 					var newid = $(this).attr('id');
+					console.log($(this).data());
 					newid = newid.replace("wpa-psk", "wireless-key").replace("wpa-ssid", "wireless-ssid");
 					var newname = $(this).attr('name');
 					newname = newname.replace("wpa-psk", "wireless-key").replace("wpa-ssid", "wireless-ssid");
@@ -299,8 +305,12 @@ function determine_wifi_options(config, data, $table, iface, alias, $alconfig) {
 					$(this).attr('name', newname);
 					console.log(newid);
 					console.log(newname);
+					var label = $(this).data('$label');
+					// for some reason a function is required to replace the for attribute value
+					$(label).attr('for', function(i, val) {
+						return val.replace("wpa-psk", "wireless-key").replace("wpa-ssid", "wireless-ssid");
+					});
 				});
-
 			} else if($(this).val() == 'wpa' || ($(this).val() == 'wpa2')) {
 				console.log(	$(this).data());
 				$(this).data('$inputs').each(function(index){
@@ -312,8 +322,14 @@ function determine_wifi_options(config, data, $table, iface, alias, $alconfig) {
 					$(this).attr('name', newname);
 					console.log(newid);
 					console.log(newname);
+					var label = $(this).data('$label');
+
+					$(label).attr('for', function(i, val) {
+						return val.replace("wireless-key", "wpa-psk").replace("wireless-ssid", "wpa-ssid");
+					});
 				});
 				$(this).data('$inputs').filter('input[type=checkbox]').button('enable');
+
 			}
 			console.log($(this).data('$inputs'));
 			$(this).data('$inputs').filter('input[type=checkbox]').each(function (ev) {
