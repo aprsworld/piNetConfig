@@ -397,15 +397,8 @@ function add_option(config, data, $table, option, title, iface, alias) {
 	} else if (config[iface]) {
 		config_value = config[iface][option];
 	}
-	else{
-		config_value = false;
-	}
-
 	var checked = (config_value) ? " checked" : "";
-	console.log(checked);
 	var disabled = (config_value) ? "" : " disabled";
-	console.log(disabled);
-	console.log(available);
 	var value = (config_value) ? config_value : (alias) ? data[iface][alias].inet[option] : data[iface][option];
 	if (value === null || value == undefined) {
 		value = "";
@@ -581,7 +574,7 @@ $.ajax("netconfig.php", {
 					.data('$alias_widget', $alias_widget);
 		}
 		//manually create the options when the iface is not in the config
-		if(counter == 0){
+		/*if(counter == 0){
 			var $config_select = $('<select name="method"></select>');
 			$config_select.append('<option value="dhcp">DHCP</option>');
 			$config_select.append('<option value="static">Static</option>');
@@ -622,7 +615,7 @@ $.ajax("netconfig.php", {
 			$ifconfig_aliases.append($alconfig);
 			$alconfig.find('input, select').data('$alias', $alconfig)
 					.data('$alias_widget', $alias_widget);
-		}
+		}*/
  		$ifconfig_aliases.accordion();
 		$ifconfig.find('input, select').data('$iface', $ifconfig)
 				.data('$iface_widget', $li);
