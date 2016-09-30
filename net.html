@@ -26,6 +26,11 @@ label {
 	border-color:		#003ECF !important;
 	color:			#FFF !important;
 }
+.ui-icon-triangle-1-s{
+	color: #fff !important;
+	border-color: #fff !important;
+	background-image: url(http://localhost/piNetConfig/res/jquery-ui-1.11.4.custom/images/ui-icons_ffffff_256x240.png) !important;
+}
 .ui_changed {
 	background-color:	#7FCF7F !important;
 	border-color:		#7F7F7F !important;
@@ -92,6 +97,10 @@ $("#update").click(function (event) {
 				var value = $(this).val();
 				if (value.trim() == "" || value == "undefined") {
 					return;
+				}
+				// add quotes around wpa-psk value because config requries this
+				if ($(this).attr('name') == 'wpa-psk'){
+					value = "\""+value+"\"";
 				}
 				if (config[alias].inet[option] != undefined) {
 					if ($.isArray(config[alias].inet[option])) {
@@ -240,7 +249,7 @@ function determine_wifi_options(config, data, $table, iface, alias, $alconfig) {
 		securityType = "wpa2";
 		console.log(securityType);
 		add_ssid_option(config, data, $table, 'wpa-ssid', 'SSID', iface, alias, false);
-		add_ssid_option(config, data, $table, 'wpa-psk', 'Pass Key', iface, false);
+		add_ssid_option(config, data, $table, 'wpa-psk', 'Pass Key', iface, alias, false);
 
 	}
 	else if(available && config[alias].protocol.inet.hasOwnProperty('wireless-ssid')){
@@ -264,6 +273,7 @@ function determine_wifi_options(config, data, $table, iface, alias, $alconfig) {
 	// set the value of our select menu and keep track of what it was originally
 	$config_select.val(securityType);
 	$config_select.data('value_orig', securityType);
+	$alconfig.append('<h3> Security Options </h3>');
 	$alconfig.append($config_select);
 	// create jquery combobox
 	$config_select.selectmenu({
@@ -311,6 +321,8 @@ function determine_wifi_options(config, data, $table, iface, alias, $alconfig) {
 						return val.replace("wpa-psk", "wireless-key").replace("wpa-ssid", "wireless-ssid");
 					});
 				});
+				$(this).data('$inputs').filter('input[type=checkbox]').button('enable');
+
 			} else if($(this).val() == 'wpa' || ($(this).val() == 'wpa2')) {
 				console.log(	$(this).data());
 				$(this).data('$inputs').each(function(index){
@@ -393,21 +405,21 @@ function add_ssid_option(config, data, $table, option, title, iface, alias, disa
 	var option_id = 'config-' + iface + '-' + (alias ? alias + '-' + option : option);
 	var config_value = null;
 	if (alias && config[alias] && config[alias].protocol && config[alias].protocol.inet) {
+		console.log(1)
 		config_value = config[alias].protocol.inet[option];
+		console.log(config_value)
 	} else if (config[iface]) {
 		config_value = config[iface][option];
+		console.log(2)
+
 	}
 	var checked = (config_value) ? " checked" : "";
 	//var disabled = (config_value) ? "" : " disabled";
-	console.log(data)
-	console.log(iface)
-	console.log(alias)
 
 	var value = (config_value) ? config_value : (alias) ? data[iface][alias].inet[option] : data[iface][option];
 	if (value === null || value == undefined) {
 		value = "";
 	}
-
 	var $tr = $('<tr>');
 	var $label = $('<label for="'+option_id+'-set">'+title+'</label>');
 	// hidden checkbox that determines whether or not the input is shown
@@ -415,7 +427,7 @@ function add_ssid_option(config, data, $table, option, title, iface, alias, disa
 	$checkbox.prop('disabled', disabled);
 	var $th = $('<th></th>').append($label).append($checkbox);
 	$tr.append($th);
-	var $input = $('<input type="text" id="'+option_id+'" name="'+option+'" value="'+value+'"'+disabled+'></input>');
+	var $input = $('<input type="text" id="'+option_id+'" name="'+option+'" value="'+value.replace(/"/g, "")+'"'+disabled+'></input>');
 	var $td = $('<td></td>').append($input);
 	$tr.append($td);
 
@@ -493,6 +505,7 @@ $.ajax("netconfig.php", {
 			// set the value of our select menu and keep track of what it was originally
 			$config_select.val(inet_config.method);
 			$config_select.data('value_orig', inet_config.method);
+			$alconfig.append('<h3> Addressing Options </h3>');
 			$alconfig.append($config_select);
 			// create jquery combobox
 			$config_select.selectmenu({
