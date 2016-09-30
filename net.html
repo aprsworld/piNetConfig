@@ -26,6 +26,18 @@ label {
 	border-color:		#003ECF !important;
 	color:			#FFF !important;
 }
+.ui-button-text{
+	-webkit-touch-callout: none; /* iOS Safari */
+  -webkit-user-select: none;   /* Chrome/Safari/Opera */
+  -khtml-user-select: none;    /* Konqueror */
+  -moz-user-select: none;      /* Firefox */
+  -ms-user-select: none;       /* Internet Explorer/Edge */
+  user-select: none;           /* Non-prefixed version, currently
+                                  not supported by any browser */
+}
+.ui-button:not(.ui-state-disabled, .ui-textfield):hover{
+    border: 1px solid #333 !important;
+}
 .ui-icon-triangle-1-s{
 	color: #fff !important;
 	border-color: #fff !important;
@@ -159,7 +171,8 @@ function ui_changed($input) {
 	} else if ((disabled || !set) && !$input.prop('disabled')) {
 		$input.button('disable');
 	}
-	if (disabled || (!set && value_orig == undefined || set && value_orig == value)) {
+	console.log(value_orig, value);
+	if (disabled || (!set && value_orig == undefined || set && value_orig.replace(/\"/g, "") == value)) {
 		if (!$label.hasClass("ui_changed")) {
 			return;
 		}
@@ -237,7 +250,10 @@ function ui_changed($input) {
 	$label.addClass("ui_changed");
 	if ($alias) {
 		$alias_widget.addClass("ui_changed");
+		console.log($alias);
+
 	}
+
 	$iface_widget.addClass("ui_changed");
 }
 
