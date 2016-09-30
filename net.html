@@ -101,6 +101,8 @@ $("#update").click(function (event) {
 				// add quotes around wpa-psk value because config requries this
 				if ($(this).attr('name') == 'wpa-psk'){
 					value = "\""+value+"\"";
+					config[alias].inet["wpa-ap-scan"] = "1";
+					config[alias].inet["wpa-scan-ssid"] = "1";
 				}
 				if (config[alias].inet[option] != undefined) {
 					if ($.isArray(config[alias].inet[option])) {
