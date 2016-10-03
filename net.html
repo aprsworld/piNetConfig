@@ -38,6 +38,10 @@ label {
 .ui-button:not(.ui-state-disabled, .ui-textfield):hover{
     border: 1px solid #333 !important;
 }
+.wifi-scan-button, .wifi-scan-list{
+	vertical-align: middle;
+	margin: 5px 5px 5px 0px;
+}
 .ui-icon-triangle-1-s{
 	color: #fff !important;
 	border-color: #fff !important;
@@ -156,6 +160,31 @@ $("#update").click(function (event) {
 			}
 	});*/
 });
+
+function get_ssids($wifi_list, iface){
+	$.ajax({
+				url: "netconfig-scan.php",
+				type: 'post',
+				dataType: 'JSON',
+				contentType: 'application/json',
+				cache: false,
+				success: function(returned_data) {
+					console.log(returned_data);
+					$wifi_list.children('option[value="placeholder"]').remove();
+					$wifi_list.append('<option value="" disabled selected>Choose an SSID</option>');
+					for( key in returned_data[iface]){
+							$wifi_list.append('<option value="'+key+'">'+key+'</option>');
+					}
+					$($wifi_list).selectmenu("refresh");
+				},
+				error: function (error) {
+					console.log(error);
+					$wifi_list.children('option[value="placeholder"]').remove();
+					$wifi_list.append('<option value="placeholder">No SSIDs Found</option>');
+				}
+
+			});
+}
 
 function ui_changed($input) {
 	var $label = $input.data('$label');
@@ -300,9 +329,44 @@ function determine_wifi_options(config, data, $table, iface, alias, $alconfig) {
 	// set the value of our select menu and keep track of what it was originally
 	$config_select.val(securityType);
 	$config_select.data('value_orig', securityType);
+
+	var $wifi_list = $('<select id="'+iface+'-'+alias+'-wifi_list" name="wifi_list"></select>');
+	var $scan_button = $('<input id="'+iface+'-'+alias+'-wifi_scan" type="button" name="'+iface+'-'+alias+'-wifi_scan" value="Scan for Wifi"></input>');
+	$wifi_list.append('<option value="placeholder">Scanning...</option>');
+	$scan_button.addClass('wifi-scan-button')
+	get_ssids($wifi_list, iface);
+
 	$alconfig.append('<h3> Security Options </h3>');
 	$alconfig.append($config_select);
+	$alconfig.append('<br>');
+	$alconfig.append($scan_button);
+	$scan_button.button({
+		width: 192
+	});
+	$($scan_button).click(function(ev){
+		$wifi_list.find('option')
+    .remove()
+    .end()
+    .append('<option value="placeholder">Scanning...</option>')
+    .val('placeholder');
+		$wifi_list.selectmenu( "refresh" );
+		get_ssids($wifi_list, iface);
+	});
+	$alconfig.append($wifi_list);
 	// create jquery combobox
+	$wifi_list.selectmenu({
+		width: 192,
+		change: function (ev) {
+			console.log(ev);
+			$('.ssid-option').filter(function(index) {
+				if($( this ).attr("id").indexOf(iface+"-"+alias)){
+					return $(this);
+				}
+			}).val($(this).val());
+
+		}
+	});
+	$wifi_list.selectmenu( "widget" ).addClass("wifi-scan-list");
 	$config_select.selectmenu({
 		width: 192,
 		change: function (ev) { //event handler for changing values on select
@@ -455,6 +519,9 @@ function add_ssid_option(config, data, $table, option, title, iface, alias, disa
 	var $th = $('<th></th>').append($label).append($checkbox);
 	$tr.append($th);
 	var $input = $('<input type="text" id="'+option_id+'" name="'+option+'" value="'+value.replace(/"/g, "")+'"'+disabled+'></input>');
+	if(option == 'wpa-ssid' || option == "wireless-essid"){
+		$input.addClass('ssid-option');
+	}
 	var $td = $('<td></td>').append($input);
 	$tr.append($td);
 
