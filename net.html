@@ -141,7 +141,7 @@ $("#update").click(function (event) {
 	var finalConfig = JSON.stringify({"config":config});
 	console.log(finalConfig);
 	alert(finalConfig);
-	$.ajax({
+/*	$.ajax({
 			url: "netconfig.php",
 			type: 'post',
 			dataType: 'JSON',
@@ -154,7 +154,7 @@ $("#update").click(function (event) {
 			error: function (error) {
 				console.log(error);
 			}
-	});
+	});*/
 });
 
 function ui_changed($input) {
@@ -279,16 +279,16 @@ function determine_wifi_options(config, data, $table, iface, alias, $alconfig) {
 		add_ssid_option(config, data, $table, 'wpa-psk', 'Pass Key', iface, alias, false);
 
 	}
-	else if(available && config[alias].protocol.inet.hasOwnProperty('wireless-ssid')){
+	else if(available && config[alias].protocol.inet.hasOwnProperty('wireless-essid')){
 		securityType = "wep";
 		console.log(securityType);
-		add_ssid_option(config, data, $table, 'wireless-ssid', 'SSID', iface, alias, false);
+		add_ssid_option(config, data, $table, 'wireless-essid', 'SSID', iface, alias, false);
 		add_ssid_option(config, data, $table, 'wireless-key', 'Pass Key', iface, alias, false);
 
 	}
 	else{
 		console.log(securityType);
-		add_ssid_option(config, data, $table, 'wireless-ssid', 'SSID', iface, alias, false);
+		add_ssid_option(config, data, $table, 'wireless-essid', 'SSID', iface, alias, false);
 		add_ssid_option(config, data, $table, 'wireless-key', 'Pass Key', iface, alias, true);
 	}
 	var $config_select = $('<select name="security"></select>');
@@ -313,9 +313,9 @@ function determine_wifi_options(config, data, $table, iface, alias, $alconfig) {
 				//$(this).data('$inputs').filter(':input[type=checkbox]').button('enable');
 				$(this).data('$inputs').each(function(index){
 					var newid = $(this).attr('id');
-					newid = newid.replace("wpa-psk", "wireless-key").replace("wpa-ssid", "wireless-ssid");
+					newid = newid.replace("wpa-psk", "wireless-key").replace("wpa-ssid", "wireless-essid");
 					var newname = $(this).attr('name');
-					newname = newname.replace("wpa-psk", "wireless-key").replace("wpa-ssid", "wireless-ssid");
+					newname = newname.replace("wpa-psk", "wireless-key").replace("wpa-ssid", "wireless-essid");
 					$(this).attr('id', newid);
 					$(this).attr('name', newname);
 					console.log(newid);
@@ -323,7 +323,7 @@ function determine_wifi_options(config, data, $table, iface, alias, $alconfig) {
 					var label = $(this).data('$label');
 					// for some reason a function is required to replace the for attribute value
 					$(label).attr('for', function(i, val) {
-						return val.replace("wpa-psk", "wireless-key").replace("wpa-ssid", "wireless-ssid");
+						return val.replace("wpa-psk", "wireless-key").replace("wpa-ssid", "wireless-essid");
 					});
 				});
 				$(this).data('$inputs').filter('input[type=checkbox]').button('enable');
@@ -335,9 +335,9 @@ function determine_wifi_options(config, data, $table, iface, alias, $alconfig) {
 				$(this).data('$inputs').each(function(index){
 					var newid = $(this).attr('id');
 					console.log($(this).data());
-					newid = newid.replace("wpa-psk", "wireless-key").replace("wpa-ssid", "wireless-ssid");
+					newid = newid.replace("wpa-psk", "wireless-key").replace("wpa-ssid", "wireless-essid");
 					var newname = $(this).attr('name');
-					newname = newname.replace("wpa-psk", "wireless-key").replace("wpa-ssid", "wireless-ssid");
+					newname = newname.replace("wpa-psk", "wireless-key").replace("wpa-ssid", "wireless-essid");
 					$(this).attr('id', newid);
 					$(this).attr('name', newname);
 					console.log(newid);
@@ -345,7 +345,7 @@ function determine_wifi_options(config, data, $table, iface, alias, $alconfig) {
 					var label = $(this).data('$label');
 					// for some reason a function is required to replace the for attribute value
 					$(label).attr('for', function(i, val) {
-						return val.replace("wpa-psk", "wireless-key").replace("wpa-ssid", "wireless-ssid");
+						return val.replace("wpa-psk", "wireless-key").replace("wpa-ssid", "wireless-essid");
 					});
 				});
 				$(this).data('$inputs').filter('input[type=checkbox]').button('enable');
@@ -354,9 +354,9 @@ function determine_wifi_options(config, data, $table, iface, alias, $alconfig) {
 				console.log(	$(this).data());
 				$(this).data('$inputs').each(function(index){
 					var newid = $(this).attr('id');
-					newid = newid.replace("wireless-key", "wpa-psk").replace("wireless-ssid", "wpa-ssid");
+					newid = newid.replace("wireless-key", "wpa-psk").replace("wireless-essid", "wpa-ssid");
 					var newname = $(this).attr('name');
-					newname = newname.replace("wireless-key", "wpa-psk").replace("wireless-ssid", "wpa-ssid");
+					newname = newname.replace("wireless-key", "wpa-psk").replace("wireless-essid", "wpa-ssid");
 					$(this).attr('id', newid);
 					$(this).attr('name', newname);
 					console.log(newid);
@@ -364,7 +364,7 @@ function determine_wifi_options(config, data, $table, iface, alias, $alconfig) {
 					var label = $(this).data('$label');
 
 					$(label).attr('for', function(i, val) {
-						return val.replace("wireless-key", "wpa-psk").replace("wireless-ssid", "wpa-ssid");
+						return val.replace("wireless-key", "wpa-psk").replace("wireless-essid", "wpa-ssid");
 					});
 				});
 				$(this).data('$inputs').filter('input[type=checkbox]').button('enable');
@@ -500,8 +500,22 @@ $.ajax("netconfig.php", {
 		$ifconfig_aliases = $('<div class="config-interface"></div>');
 		$ifconfig.append($ifconfig_aliases);
 		var counter = 0;
+		console.log(data[iface]);
+		if(!iface in data[iface] && iface !== 'lo'){
+			data[iface][iface] = {};
+			data[iface][iface].inet = {}
+			console.log(data[iface]);
+		}
+		// Create an empty alias if the interface has none
+		if (iface in data[iface]){}
+		else{
+			data[iface][iface] = {};
+			data[iface][iface].inet = {};
+			console.log(config);
+			console.log(data[iface]);
+		}
 		for (var alias in data[iface]) {
-			//Exclude wierd secondary ip addresses
+			//Exclude weird secondary ip addresses
 			if(alias.endsWith("-secondary")){
 				continue;
 			}
@@ -573,6 +587,7 @@ $.ajax("netconfig.php", {
 			$alconfig.find('input, select').data('$alias', $alconfig)
 					.data('$alias_widget', $alias_widget);
 		}
+
 		//manually create the options when the iface is not in the config
 		/*if(counter == 0){
 			var $config_select = $('<select name="method"></select>');
