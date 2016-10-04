@@ -38,9 +38,14 @@ label {
 .ui-button:not(.ui-state-disabled, .ui-textfield):hover{
     border: 1px solid #333 !important;
 }
-.wifi-scan-button, .wifi-scan-list{
+.wifi-scan-button, .wifi-scan-list, .drop-down-label, .drop-down{
 	vertical-align: middle;
 	margin: 5px 5px 5px 0px;
+}
+.drop-down-label{
+	display: inline-block;
+	text-align: center;
+	width: 124px;
 }
 .ui-icon-triangle-1-s{
 	color: #fff !important;
@@ -337,6 +342,7 @@ function determine_wifi_options(config, data, $table, iface, alias, $alconfig) {
 	get_ssids($wifi_list, iface);
 
 	$alconfig.append('<h3> Security Options </h3>');
+	$alconfig.append('<label class="drop-down-label" for="">Security Type</label>');
 	$alconfig.append($config_select);
 	$alconfig.append('<br>');
 	$alconfig.append($scan_button);
@@ -441,10 +447,35 @@ function determine_wifi_options(config, data, $table, iface, alias, $alconfig) {
 			ui_changed($(this));
 		}
 	});
+	$config_select.selectmenu( "widget" ).addClass("drop-down");
 	$config_select.data('$inputs', $table.find('input'));
 
 
 }
+
+function checkNested(obj, pathArr) {
+
+  for (var i = 0; i < pathArr.length; i++) {
+    if (!obj || !obj.hasOwnProperty(pathArr[i])) {
+      return {found:false, result:null};
+    }
+    obj = obj[pathArr[i]];
+  }
+	console.log(obj);
+  return {found:true, result:obj};
+}
+function build_current_settings(config, data){
+
+
+}
+function add_nested_setting(data, pathArr/*, $table, option, title, pathArr*/){
+	var checked = checkNested(data, pathArr);
+	if(checked.found){
+		console.log(checked.result)
+	}
+}
+
+
 
 /* config = config object from json, data = current settings from json, $table is the html element that holds everything,
    option = address, netmask, etc. , title = human readable title for option, iface = interface we are workign with
@@ -547,6 +578,9 @@ $.ajax("netconfig.php", {
 }).done(function (data, status, XHR) {
 	var config = data.config;
 	delete data.config;
+	//checknested test
+	add_nested_setting(data, ['wlan0', 'wireless', 'type']);
+	//console.log(checkNested(data, ['wlan0', 'wireless', 'type']));
 	for (var iface in data) {
 		// Create what will become the tabs for each interface at the top of the screen
 		var $li = $('<li><a href="#interface-' + iface + '">' + iface + '</a></li>');
