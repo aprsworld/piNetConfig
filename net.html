@@ -9,6 +9,7 @@
 label {
 	width: 100%;
 }
+
 .ui-textfield {
 	font:		inherit;
 	color:		inherit;
@@ -53,10 +54,13 @@ label {
 
 }
 .current-settings-tr:nth-child(even){
-	background-color: #ddd;
 
 }
-.current-settings-tr + .current-settings-tr{
+.current-settings-tr + .current-settings-tr > th{
+	border-top: 1px solid #ccc;
+}
+.current-settings-tr + .current-settings-tr > td{
+	border-top: 1px solid #ccc;
 }
 .current-settings-th{
 	width: 300px;
@@ -108,6 +112,7 @@ label {
 </div>
 
 <script>
+var _current_settings_items = {};
 $("#update").prop('disabled', true);
 $("input:button").button();
 $("#reset").click(function (event) {
@@ -170,7 +175,7 @@ $("#update").click(function (event) {
 	var finalConfig = JSON.stringify({"config":config});
 	console.log(finalConfig);
 	alert(finalConfig);
-/*	$.ajax({
+	$.ajax({
 			url: "netconfig.php",
 			type: 'post',
 			dataType: 'JSON',
@@ -183,7 +188,7 @@ $("#update").click(function (event) {
 			error: function (error) {
 				console.log(error);
 			}
-	});*/
+	});
 });
 
 function get_ssids($wifi_list, iface){
@@ -370,6 +375,7 @@ function determine_wifi_options(config, data, $table, iface, alias, $alconfig) {
 		width: 192
 	});
 	$($scan_button).click(function(ev){
+		
 		$wifi_list.find('option')
     .remove()
     .end()
@@ -529,12 +535,12 @@ function build_current_settings(config, data, $ifconfig){
 	$ifconfig.accordion();
 }
 
-function add_nested_setting(data, pathArr, $table, title/*, $table, option, title*/){
+function add_nested_setting(data, pathArr, $table, title){
 	var checked = checkNested(data, pathArr);
 	if(checked.found){
 		var $tr = $('<tr class="current-settings-tr">');
 		var $label = $('<label class="current-settings-label">'+title+'</label>');
-		var option_id = pathArr.join('-');
+		var option_id = 'currentsettings_'+pathArr.join('-').replace(' ', '');
 		var available = false;
 		var option = pathArr[pathArr.length];
 		var value = checked.result;
@@ -542,12 +548,31 @@ function add_nested_setting(data, pathArr, $table, title/*, $table, option, titl
 		$tr.append($th);
 		var $input = $('<span id="'+option_id+'" name="'+option+'">'+value+' </span>');
 		var $td = $('<td></td>').append($input);
+		_current_settings_items[option_id] = pathArr;
+		console.log(_current_settings_items);
 		$tr.append($td);
 		$table.append($tr);
 	}
 }
 
-
+function update_current_settings(){
+	$.ajax("netconfig.php", {
+		context:	this,
+		cache:		false,
+		dataType:	'json',
+		ifModified:	true,
+		headers:	{},
+		timeout: 5000
+	}).done(function (data, status, XHR) {
+		for( var key in _current_settings_items){
+			var res = checkNested(data, _current_settings_items[key]);
+			var id = '#currentsettings_'+_current_settings_items[key].join('-').replace(' ', '');
+			console.log($(id).text());
+			$(id).text(res.result);
+		}
+		delete data;
+	});
+}
 
 /* config = config object from json, data = current settings from json, $table is the html element that holds everything,
    option = address, netmask, etc. , title = human readable title for option, iface = interface we are workign with
@@ -583,13 +608,14 @@ function add_option(config, data, $table, option, title, iface, alias) {
 	$tr.append($td);
 
 	$checkbox.data('$input', $input);
-	$input.data('value_orig', config_value);
+	console.log(config_value);
+	$input.data('value_orig', value);
 	$input.data('$label', $label);
 	$input.data('$checkbox', $checkbox);
 	$input.button().addClass('ui-textfield').off('mouseenter').off('mousedown').off('keydown').bind('propertychange change keyup click keyup input paste', function(ev) {
 		ui_changed($(this));
 	});
-	$checkbox.button().bind('click change keyup propertychange input', function(ev) {
+	$checkbox.button().bind('blur click change keyup propertychange input', function(ev) {
 		ui_changed($(this).data('$input'));
 	});
 	$table.append($tr);
@@ -836,9 +862,11 @@ $.ajax("netconfig.php", {
 	$("#interfaces").tabs();
 	console.log($('#update').attr("disabled"))
 	$('#update').button('enable');
+	setInterval(update_current_settings, 5000);
 }).fail(function (XHR, status, error) {
 	alert("Failed to get configuration information!");
 });
+
 </script>
 </body>
 </html>
