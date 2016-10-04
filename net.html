@@ -9,7 +9,12 @@
 label {
 	width: 100%;
 }
-
+.ui-tabs-nav{
+	background-color: white !important;
+	border-top: none !important;
+	border-left: none !important;
+	border-right: none !important;
+}
 .ui-textfield {
 	font:		inherit;
 	color:		inherit;
@@ -375,7 +380,7 @@ function determine_wifi_options(config, data, $table, iface, alias, $alconfig) {
 		width: 192
 	});
 	$($scan_button).click(function(ev){
-		
+
 		$wifi_list.find('option')
     .remove()
     .end()
@@ -500,7 +505,16 @@ function build_current_settings(config, data, $ifconfig){
 	for( var iface in data){
 		console.log("---------------------------"+iface+"---------------------------");
 		$ifaces = $('<div class="config-interface"></div>');
-		var $iface_widget = $('<h3>' + iface + '</h3>');
+		var $iface_widget = null;
+		if(iface.startsWith("wlan")){
+			$iface_widget = $('<h3> Wireless (' + iface + ') </h3>');
+		}
+		else if(iface.startsWith("eth")){
+			$iface_widget = $('<h3> Ethernet (' + iface + ') </h3>');
+		}
+		else if(iface.startsWith("lo")){
+			$iface_widget = $('<h3> Loopback (' + iface + ') </h3>');
+		}
 		$ifaces.append($iface_widget);
 		var $alconfig = $('<div class="alias"></div>');
 		$ifconfig.append($ifaces);
@@ -520,7 +534,7 @@ function build_current_settings(config, data, $ifconfig){
 		}
 		for( var alias in data[iface]){
 			if(alias.startsWith("wlan") || alias.startsWith("eth")){
-				$alconfig.append('<h3>Wireless ( '+alias+' ) Addressing</h3>')
+				$alconfig.append('<h3> '+alias+' Addressing</h3>')
 				var $addressing_table = $('<table border="0"></table>');
 				add_nested_setting(data, [iface, alias,'inet', 'address'], $addressing_table, 'IP Address');
 				add_nested_setting(data, [iface, alias,'inet', 'netmask'], $addressing_table, 'Network Mask');
@@ -688,15 +702,29 @@ $.ajax("netconfig.php", {
 
 	for (var iface in data) {
 		// Create what will become the tabs for each interface at the top of the screen
-		var $li = $('<li><a href="#interface-' + iface + '">' + iface + '</a></li>');
+		var iface_type = null;
+		if(iface.startsWith('wlan')){
+			iface_type = "Wireless";
+		}
+		else if(iface.startsWith('eth')){
+			iface_type = "Ethernet"
+		}
+		else if(iface.startsWith('lo')){
+			iface_type = "Loopback"
+		}
+		else{
+			iface_type = ""
+		}
+		var $li = $('<li><a href="#interface-' + iface + '">' + iface_type+' (' + iface + ')</a></li>');
 		$('#interfaces ul').append($li);
 		var $ifconfig = $('<div class="interface"></div>');
 		$('#interfaces').append($ifconfig);
 		$ifconfig.attr('id', 'interface-' + iface);
+		$ifconfig.append('<h2>'+ iface_type+' (' + iface + ')</h2>')
 		$ifconfig_table = $('<table border=0>');
 		// Add global options above the individual ifaces
-		add_option(config, data, $ifconfig_table, 'hwaddress', 'MAC Address', iface);
-		add_option(config, data, $ifconfig_table, 'mtu', 'MTU', iface);
+		//add_option(config, data, $ifconfig_table, 'hwaddress', 'MAC Address', iface);
+		//add_option(config, data, $ifconfig_table, 'mtu', 'MTU', iface);
 
 		// set each button to "disabled"
 		$ifconfig_table.find('input').button('disable');
