@@ -47,6 +47,26 @@ label {
 	text-align: center;
 	width: 124px;
 }
+.current-settings-label{
+	display: inline-block;
+	text-align: left !important;
+
+}
+.current-settings-tr:nth-child(even){
+	background-color: #ddd;
+
+}
+.current-settings-tr + .current-settings-tr{
+}
+.current-settings-th{
+	width: 300px;
+	color: #333;
+	font-weight: 300
+}
+.current-settings-th:odd{
+	background-color: #ccc;
+
+}
 .ui-icon-triangle-1-s{
 	color: #fff !important;
 	border-color: #fff !important;
@@ -95,7 +115,7 @@ $("#reset").click(function (event) {
 });
 $("#update").click(function (event) {
 	var config = {};
-	$(".interface").each(function (index, el) {
+	$(".interface").not('#interface-current-settings').each(function (index, el) {
 		var iface = $(this).attr('id').substring(10);
 
 		config[iface] = {
@@ -453,25 +473,77 @@ function determine_wifi_options(config, data, $table, iface, alias, $alconfig) {
 
 }
 
+/* checkNested(obj, pathArr)
+** Checks for a nested property within an object
+** obj is the object we are searching through,
+** pathArr is the array of nested keys.
+** returns an object that states whether nested key was found add_nested_setting
+** the value of said key.
+*/
 function checkNested(obj, pathArr) {
-
   for (var i = 0; i < pathArr.length; i++) {
     if (!obj || !obj.hasOwnProperty(pathArr[i])) {
       return {found:false, result:null};
     }
     obj = obj[pathArr[i]];
   }
-	console.log(obj);
   return {found:true, result:obj};
 }
-function build_current_settings(config, data){
 
+function build_current_settings(config, data, $ifconfig){
+	for( var iface in data){
+		console.log("---------------------------"+iface+"---------------------------");
+		$ifaces = $('<div class="config-interface"></div>');
+		var $iface_widget = $('<h3>' + iface + '</h3>');
+		$ifaces.append($iface_widget);
+		var $alconfig = $('<div class="alias"></div>');
+		$ifconfig.append($ifaces);
+		$alconfig.append('<h3>Global Settings</h3>')
+		//$alconfig.attr('id', 'interface-' + iface + '-' + alias);
+		var $globals_table = $('<table border="0"></table>');
+		add_nested_setting(data, [iface, 'state'], $globals_table, "Link State");
+		add_nested_setting(data, [iface, 'mtu'], $globals_table, 'Max Transmission Unit');
+		add_nested_setting(data, [iface, 'mode'], $globals_table, 'Mode');
+		$alconfig.append($globals_table);
+		if(iface.startsWith("wlan")){
+			$alconfig.append('<h3>Wifi Settings</h3>')
+			var $wifi_table = $('<table border="0"></table>');
+			add_nested_setting(data, [iface,'wireless','settings', 'ESSID'], $wifi_table, 'Extended SSID');
+			add_nested_setting(data, [iface,'wireless','settings', 'Signal level'], $wifi_table, 'Signal Level');
+			$alconfig.append($wifi_table);
+		}
+		for( var alias in data[iface]){
+			if(alias.startsWith("wlan") || alias.startsWith("eth")){
+				$alconfig.append('<h3>Wireless ( '+alias+' ) Addressing</h3>')
+				var $addressing_table = $('<table border="0"></table>');
+				add_nested_setting(data, [iface, alias,'inet', 'address'], $addressing_table, 'IP Address');
+				add_nested_setting(data, [iface, alias,'inet', 'netmask'], $addressing_table, 'Network Mask');
+				add_nested_setting(data, [iface, alias,'inet', 'gateway'], $addressing_table, 'Gateway Address');
+				add_nested_setting(data, [iface, alias,'inet', 'brd'], $addressing_table, 'Broadcast Address');
+				$alconfig.append($addressing_table);
+			}
+		}
+		$ifconfig.append($alconfig);
 
+	}
+	$ifconfig.accordion();
 }
-function add_nested_setting(data, pathArr/*, $table, option, title, pathArr*/){
+
+function add_nested_setting(data, pathArr, $table, title/*, $table, option, title*/){
 	var checked = checkNested(data, pathArr);
 	if(checked.found){
-		console.log(checked.result)
+		var $tr = $('<tr class="current-settings-tr">');
+		var $label = $('<label class="current-settings-label">'+title+'</label>');
+		var option_id = pathArr.join('-');
+		var available = false;
+		var option = pathArr[pathArr.length];
+		var value = checked.result;
+		var $th = $('<th class="current-settings-th"></th>').append($label);
+		$tr.append($th);
+		var $input = $('<span id="'+option_id+'" name="'+option+'">'+value+' </span>');
+		var $td = $('<td></td>').append($input);
+		$tr.append($td);
+		$table.append($tr);
 	}
 }
 
@@ -579,8 +651,15 @@ $.ajax("netconfig.php", {
 	var config = data.config;
 	delete data.config;
 	//checknested test
-	add_nested_setting(data, ['wlan0', 'wireless', 'type']);
+	var $li = $('<li><a href="#interface-current-settings">Current Settings</a></li>');
+	$('#interfaces ul').append($li);
+	var $currentsettings = $('<div class="interface"></div>');
+	$('#interfaces').append($currentsettings);
+	$currentsettings.attr('id', 'interface-current-settings');
+	build_current_settings(config, data, $currentsettings);
+	//add_nested_setting(data, ['wlan0', 'wireless', 'type']);
 	//console.log(checkNested(data, ['wlan0', 'wireless', 'type']));
+
 	for (var iface in data) {
 		// Create what will become the tabs for each interface at the top of the screen
 		var $li = $('<li><a href="#interface-' + iface + '">' + iface + '</a></li>');
