@@ -9,6 +9,13 @@
 label {
 	width: 100%;
 }
+body {
+	background-color: white;
+}
+.main-h1{
+	font-family: sans-serif;
+	color: #333;
+}
 .ui-tabs-nav{
 	background-color: white !important;
 	border-top: none !important;
@@ -61,6 +68,10 @@ label {
 .current-settings-tr:nth-child(even){
 
 }
+.current-settings-tr > td{
+	color: #454545;
+
+}
 .current-settings-tr + .current-settings-tr > th{
 	border-top: 1px solid #ccc;
 }
@@ -69,7 +80,7 @@ label {
 }
 .current-settings-th{
 	width: 300px;
-	color: #333;
+	color: #454545;
 	font-weight: 300
 }
 .current-settings-th:odd{
@@ -105,7 +116,7 @@ label {
 </head>
 
 <body>
-<h1 style="float: left;">Network Configuration</h1>
+<h1 class="main-h1" style="float: left;">Network Configuration</h1>
 
 <div style="float: right;" id="buttons">
 <input id="reset" type="button" name="reset" value="Reset"></input>
@@ -518,7 +529,7 @@ function build_current_settings(config, data, $ifconfig){
 		$ifaces.append($iface_widget);
 		var $alconfig = $('<div class="alias"></div>');
 		$ifconfig.append($ifaces);
-		$alconfig.append('<h3>Global Settings</h3>')
+		$alconfig.append('<h3>Interface Settings</h3>')
 		//$alconfig.attr('id', 'interface-' + iface + '-' + alias);
 		var $globals_table = $('<table border="0"></table>');
 		add_nested_setting(data, [iface, 'state'], $globals_table, "Link State");
@@ -576,16 +587,39 @@ function update_current_settings(){
 		dataType:	'json',
 		ifModified:	true,
 		headers:	{},
-		timeout: 5000
-	}).done(function (data, status, XHR) {
+		timeout: 5000,
+		success: function(data, status, XHR) {
+			for( var key in _current_settings_items){
+				var res = checkNested(data, _current_settings_items[key]);
+				var id = '#currentsettings_'+_current_settings_items[key].join('-').replace(' ', '');
+				console.log($(id).text());
+				$(id).text(res.result);
+			}
+			clearInterval(csTimer.timerID);
+			csTimer.timerID = setInterval(csTimerUpdate, 1000);
+			csTimer.value = 0;
+			$('#currentSettingsTimer').text(''+csTimer.value+' seconds since last update.');
+			delete data;
+		},
+		error: function(error) {
+			cosole.log(error);
+		},
+		complete: function() {
+			setTimeout(update_current_settings, 5000);
+		}
+	});
+
+
+	/*.done(function (data, status, XHR) {
 		for( var key in _current_settings_items){
 			var res = checkNested(data, _current_settings_items[key]);
 			var id = '#currentsettings_'+_current_settings_items[key].join('-').replace(' ', '');
 			console.log($(id).text());
 			$(id).text(res.result);
 		}
+		setTimeout(update_current_settings, 5000);
 		delete data;
-	});
+	});*/
 }
 
 /* config = config object from json, data = current settings from json, $table is the html element that holds everything,
@@ -681,6 +715,16 @@ function add_ssid_option(config, data, $table, option, title, iface, alias, disa
 	$table.append($tr);
 }
 
+var csTimer = {
+	value: 0,
+	timerID: null
+}
+
+function csTimerUpdate(){
+	csTimer.value++;
+	$('#currentSettingsTimer').text(''+csTimer.value+' seconds since last update.');
+}
+
 $.ajax("netconfig.php", {
 	context:	this,
 	cache:		false,
@@ -696,7 +740,11 @@ $.ajax("netconfig.php", {
 	var $currentsettings = $('<div class="interface"></div>');
 	$('#interfaces').append($currentsettings);
 	$currentsettings.attr('id', 'interface-current-settings');
-	build_current_settings(config, data, $currentsettings);
+	$currentsettings.append('<div id="currentSettingsTimer"> '+csTimer.value+' seconds since last update. </div>');
+	csTimer.timerID = setInterval(csTimerUpdate, 1000);
+	$currentSettingsAccordion = $('<div id="currentSettingsAccordion"></div>');
+	$currentsettings.append($currentSettingsAccordion);
+	build_current_settings(config, data, $currentSettingsAccordion);
 	//add_nested_setting(data, ['wlan0', 'wireless', 'type']);
 	//console.log(checkNested(data, ['wlan0', 'wireless', 'type']));
 
@@ -890,7 +938,7 @@ $.ajax("netconfig.php", {
 	$("#interfaces").tabs();
 	console.log($('#update').attr("disabled"))
 	$('#update').button('enable');
-	setInterval(update_current_settings, 5000);
+	setTimeout(update_current_settings, 5000);
 }).fail(function (XHR, status, error) {
 	alert("Failed to get configuration information!");
 });
