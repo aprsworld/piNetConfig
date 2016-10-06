@@ -9,6 +9,7 @@ function toggleFeature($feature){
       exec('sudo ./sampleScript.sh');
       break;
     case 'test2':
+      //todo: create result variable so that feed back can be returned to GUI
       exec('sudo ./sampleScript1.sh');
       break;
     default:

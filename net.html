@@ -136,7 +136,7 @@ $("#reset").click(function (event) {
 });
 $("#update").click(function (event) {
 	var config = {};
-	$(".interface").not('#interface-current-settings').each(function (index, el) {
+	$(".interface").not('#interface-current-settings, #interface-system-settings').each(function (index, el) {
 		var iface = $(this).attr('id').substring(10);
 
 		config[iface] = {
@@ -511,7 +511,14 @@ function checkNested(obj, pathArr) {
   }
   return {found:true, result:obj};
 }
-
+function build_system_settings(config, data, $ifconfig){
+	var $button1 = $('<input id="script1" type="button" value="script1"></input>');
+	$button1.button();
+	var $button2 = $('<input id="script2" type="button" value="script2"></input>');
+	$button2.button();
+	$ifconfig.append($button1);
+	$ifconfig.append($button2);
+}
 function build_current_settings(config, data, $ifconfig){
 	for( var iface in data){
 		console.log("---------------------------"+iface+"---------------------------");
@@ -870,49 +877,6 @@ $.ajax("netconfig.php", {
 					.data('$alias_widget', $alias_widget);
 		}
 
-		//manually create the options when the iface is not in the config
-		/*if(counter == 0){
-			var $config_select = $('<select name="method"></select>');
-			$config_select.append('<option value="dhcp">DHCP</option>');
-			$config_select.append('<option value="static">Static</option>');
-			$config_select.val('dhcp');
-			$config_select.data('value_orig', 'dhcp');
-			$alconfig.append('<h3> Addressing Options </h3>');
-			$alconfig.append($config_select);
-			// create jquery combobox
-			$config_select.selectmenu({
-				width: 192,
-				change: function (ev) { //event handler for changing values on select
-					if ($(this).val() == 'static') {
-						$(this).data('$inputs').filter('input[type=checkbox]').button('enable');
-					} else {
-						$(this).data('$inputs').filter('input[type=checkbox]').button('disable');
-					}
-					$(this).data('$inputs').filter('input[type=checkbox]').each(function (ev) {
-						ui_changed($(this).data('$input'));
-					});
-					ui_changed($(this));
-				}
-			});
-			var $alias_table = $('<table border="0"></table>');
-			var $ssid_table = $('<table border="0"></table>');
-			//add_option(config, data, $alias_table, 'hostname', 'Hostname', iface, alias);
-			add_option(config, data, $alias_table, 'address', 'Address', iface, alias);
-			add_option(config, data, $alias_table, 'netmask', 'Netmask', iface, alias);
-			//add_option(config, data, $alias_table, 'pointopoint', 'Point to Point', iface, alias);
-			add_option(config, data, $alias_table, 'gateway', 'Gateway', iface, alias);
-			$alconfig.append($alias_table);
-			if(iface.startsWith("wlan")){
-				determine_wifi_options(config, data, $ssid_table, iface, alias, $alconfig);
-			}
-			$alconfig.append($ssid_table);
-			$config_select.data('$inputs', $alias_table.find('input'));
-			var $alias_widget = $('<h3>' + alias + '</h3>');
-			$ifconfig_aliases.append($alias_widget);
-			$ifconfig_aliases.append($alconfig);
-			$alconfig.find('input, select').data('$alias', $alconfig)
-					.data('$alias_widget', $alias_widget);
-		}*/
  		$ifconfig_aliases.accordion();
 		$ifconfig.find('input, select').data('$iface', $ifconfig)
 				.data('$iface_widget', $li);
@@ -935,6 +899,14 @@ $.ajax("netconfig.php", {
 	});
 */
 	}
+	var $li2 = $('<li><a href="#interface-system-settings">System Settings</a></li>');
+	$('#interfaces ul').append($li2);
+	var $systemsettings = $('<div class="interface"></div>');
+	$('#interfaces').append($systemsettings);
+	$systemsettings.attr('id', 'interface-system-settings');
+	$systemSettingsAccordion = $('<div id="systemSettingsAccordion"></div>');
+	$systemsettings.append($systemSettingsAccordion);
+	build_system_settings(config, data, $systemSettingsAccordion);
 	$("#interfaces").tabs();
 	console.log($('#update').attr("disabled"))
 	$('#update').button('enable');
