@@ -12,6 +12,61 @@ label {
 body {
 	background-color: white;
 }
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 24px;
+}
+
+.switch input {display:none;}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 16px;
+  width: 16px;
+  left: 14px;
+  bottom: 4px;
+  background-color: white;
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+
+input:checked + .slider {
+  background-color: #2196F3;
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px #2196F3;
+}
+
+input:checked + .slider:before {
+  -webkit-transform: translateX(26px);
+  -ms-transform: translateX(26px);
+  transform: translateX(26px);
+}
+
+/* Rounded sliders */
+.slider.round {
+  border-radius: 34px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
+}
 .main-h1{
 	font-family: sans-serif;
 	color: #333;
@@ -511,13 +566,77 @@ function checkNested(obj, pathArr) {
   }
   return {found:true, result:obj};
 }
+function changeSystemOption(feature){
+	$.ajax("shExecute.php", {
+		type: 'POST',
+		context:	this,
+		cache:		false,
+		data: {
+			'feature' : feature
+		},
+		headers:	{},
+		timeout: 5000,
+		success: function(data, status, XHR) {
+			console.log(data);
+			alert('success');
+		},
+		error: function() {
+			alert('failure');
+		},
+		complete: function() {
+		}
+	});
+}
+function add_system_setting(data, $table, setting, title, script){
+	var $tr = $('<tr class="system-settings-tr">');
+	var $label = $('<label class="system-settings-label">'+title+'</label>');
+	var option_id = 'systemsettings_'+setting;
+	var $th = $('<th class="system-settings-th"></th>').append($label);
+	$tr.append($th);
+	var $input = $(
+		'<td  class="onoffswitch">'+
+			'<label class="switch">'+
+				'<input type="checkbox" checked>'+
+				'<div class="slider round"></div>'+
+			'</label>'+
+		'</td>'
+	);
+	$tr.append($input);
+	$table.append($tr);
+	//setup click event for checkbox
+	//TODO attach even to actual input - currently fireing twice
+	$($input).click(function(){
+		changeSystemOption(script);
+	});
+}
 function build_system_settings(config, data, $ifconfig){
+	var $sys_settings_table = $('<table border="0"></table>');
+	add_system_setting('', $sys_settings_table, 'webconfig', 'Allow Web Config', 'test1');
+	add_system_setting('', $sys_settings_table, 'ssh', 'Allow ssh', 'test2');
+	$ifconfig.append($sys_settings_table);
+}
+function build_system_settings1(config, data, $ifconfig){
+	var $globals_table = $('<table border="0"></table>');
+	var $webConfig = $('<label> Allow Web Config </label>')
 	var $button1 = $('<input id="script1" type="button" value="script1"></input>');
 	$button1.button();
+	var $sshConfig = $('<label> Allow SSH </label>')
 	var $button2 = $('<input id="script2" type="button" value="script2"></input>');
 	$button2.button();
+	$ifconfig.append($sshConfig);
 	$ifconfig.append($button1);
+	$ifconfig.append('<br>');
+	$ifconfig.append($webConfig);
 	$ifconfig.append($button2);
+	$($button1).click(function(){
+		changeSystemOption('test1');
+
+	});
+	$($button2).click(function(){
+		changeSystemOption('test2');
+
+	});
+
 }
 function build_current_settings(config, data, $ifconfig){
 	for( var iface in data){

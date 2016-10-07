@@ -1,5 +1,8 @@
 <?php
+if(isset($_POST['feature'])){
 
+  $postData = $_POST['feature'];
+}
 
 function toggleFeature($feature){
   $oldDir = getcwd();
@@ -16,8 +19,14 @@ function toggleFeature($feature){
       echo 'no feature by that name';
   }
   chdir($oldDir);
+  echo json_encode(array('feature' => $feature));
 }
 
-toggleFeature($_GET['feature']);
-
+//if data was sent to the script, we run the function
+if(isset($postData)){
+  toggleFeature($postData);
+}
+else{ //otherwise, we check the data
+   //TODO Write data checking function
+}
 php?>
