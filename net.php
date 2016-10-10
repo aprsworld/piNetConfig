@@ -12,6 +12,9 @@ label {
 body {
 	background-color: white;
 }
+#currentsettingstimer{
+	text-align: right;
+}
 /* Switch code found at http://www.w3schools.com/howto/tryit.asp?filename=tryhow_css_switch*/
 .switch {
   position: relative;
@@ -51,7 +54,7 @@ body {
   content: "OFF";
   height: 34px;
   width: 34px;
-  left: 10px;
+  left: 5px;
   bottom: -1px;
   background-color: white;
   -webkit-transition: .4s;
@@ -191,7 +194,7 @@ input:checked + .slider:before {
 </head>
 
 <body>
-<h1 class="main-h1" style="float: left;">Network Configuration</h1>
+<h1 class="main-h1" style="float: left;">Network Configuration <?php echo "- " . gethostname(); ?> </h1>
 
 <div style="float: right;" id="buttons">
 <input id="reset" type="button" name="reset" value="Reset"></input>
