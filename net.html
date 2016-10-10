@@ -16,39 +16,57 @@ body {
 .switch {
   position: relative;
   display: inline-block;
-  width: 60px;
-  height: 24px;
+  width: 75px;
+  height: 35px;
 }
-
+.onoffswitch {
+	width: 120px;
+	text-align: center;
+}
 .switch input {display:none;}
 
 .slider {
+	border: 1px solid #ccc;
+
+	text-align: left !important;
   position: absolute;
   cursor: pointer;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: #ccc;
+  background-color: #aaa;
   -webkit-transition: .4s;
   transition: .4s;
 }
 
 .slider:before {
+	border: 1px solid #aaa;
+
+	font-size: 12px;
   position: absolute;
-  content: "";
-  height: 16px;
-  width: 16px;
-  left: 14px;
-  bottom: 4px;
+	text-align: center;
+	line-height: 3.0em;
+	color: #333;
+  content: "OFF";
+  height: 34px;
+  width: 34px;
+  left: 10px;
+  bottom: -1px;
   background-color: white;
   -webkit-transition: .4s;
   transition: .4s;
 }
 
+
 input:checked + .slider {
   background-color: #2196F3;
 }
+
+input:checked + .slider:before {
+	content: "ON"
+}
+
 
 input:focus + .slider {
   box-shadow: 0 0 1px #2196F3;
@@ -62,7 +80,7 @@ input:checked + .slider:before {
 
 /* Rounded sliders */
 .slider.round {
-  border-radius: 34px;
+  border-radius: 24px;
 }
 
 .slider.round:before {
@@ -116,7 +134,8 @@ input:checked + .slider:before {
 	text-align: center;
 	width: 124px;
 }
-.current-settings-label{
+.system-settings-label, .current-settings-label{
+	font-weight: 300;
 	display: inline-block;
 	text-align: left !important;
 
@@ -184,6 +203,17 @@ input:checked + .slider:before {
 </div>
 
 <script>
+if (!String.prototype.startsWith) {
+	String.prototype.startsWith = function(searchString, position) {
+		position = position || 0;
+		return this.indexOf(searchString, position) === position;
+	};
+}
+if (!String.prototype.endsWith) {
+	String.prototype.endsWith = function(suffix) {
+    return this.indexOf(suffix, this.length - suffix.length) !== -1;
+	};
+}
 var _current_settings_items = {};
 $("#update").prop('disabled', true);
 $("input:button").button();
@@ -579,33 +609,35 @@ function changeSystemOption(feature){
 		timeout: 5000,
 		success: function(data, status, XHR) {
 			console.log(data);
-			alert('success');
+			//alert('success');
 		},
 		error: function() {
-			alert('failure');
+			//alert('failure');
 		},
 		complete: function() {
 		}
 	});
 }
 function add_system_setting(data, $table, setting, title, script){
+
+	//create the label
 	var $tr = $('<tr class="system-settings-tr">');
 	var $label = $('<label class="system-settings-label">'+title+'</label>');
 	var option_id = 'systemsettings_'+setting;
 	var $th = $('<th class="system-settings-th"></th>').append($label);
 	$tr.append($th);
 
+	//create the checkbox switch
 	var $td = $('<td  class="onoffswitch"></td>');
 	var $switchLabel = $('<label class="switch"></label>');
 	var $cbox = $('<input type="checkbox" checked>');
-	var $slider = $('<div class="slider round"></div>');
+	var $slider = $('<div class="slider round">  </div>');
 	$switchLabel.append($cbox);
 	$switchLabel.append($slider);
 	$td.append($switchLabel);
 	$tr.append($td);
 	$table.append($tr);
 	//setup click event for checkbox
-	//TODO attach even to actual input - currently fireing twice
 	$($slider).click(function(){
 		changeSystemOption(script);
 	});
@@ -613,7 +645,7 @@ function add_system_setting(data, $table, setting, title, script){
 function build_system_settings(config, data, $ifconfig){
 	var $sys_settings_table = $('<table border="0"></table>');
 	add_system_setting('', $sys_settings_table, 'webconfig', 'Allow Web Config', 'test1');
-	add_system_setting('', $sys_settings_table, 'ssh', 'Allow ssh', 'test2');
+	add_system_setting('', $sys_settings_table, 'ssh', 'Allow SSH', 'test2');
 	$ifconfig.append($sys_settings_table);
 }
 function build_system_settings1(config, data, $ifconfig){
@@ -715,7 +747,9 @@ function update_current_settings(){
 		ifModified:	true,
 		headers:	{},
 		timeout: 5000,
+		retryAfter: 10000,
 		success: function(data, status, XHR) {
+			console.log(data);
 			for( var key in _current_settings_items){
 				var res = checkNested(data, _current_settings_items[key]);
 				var id = '#currentsettings_'+_current_settings_items[key].join('-').replace(' ', '');
@@ -729,7 +763,7 @@ function update_current_settings(){
 			delete data;
 		},
 		error: function(error) {
-			cosole.log(error);
+			console.log(error);
 		},
 		complete: function() {
 			setTimeout(update_current_settings, 5000);
