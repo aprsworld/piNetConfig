@@ -12,6 +12,7 @@ label {
 body {
 	background-color: white;
 }
+/* Switch code found at http://www.w3schools.com/howto/tryit.asp?filename=tryhow_css_switch*/
 .switch {
   position: relative;
   display: inline-block;
@@ -593,19 +594,19 @@ function add_system_setting(data, $table, setting, title, script){
 	var option_id = 'systemsettings_'+setting;
 	var $th = $('<th class="system-settings-th"></th>').append($label);
 	$tr.append($th);
-	var $input = $(
-		'<td  class="onoffswitch">'+
-			'<label class="switch">'+
-				'<input type="checkbox" checked>'+
-				'<div class="slider round"></div>'+
-			'</label>'+
-		'</td>'
-	);
-	$tr.append($input);
+
+	var $td = $('<td  class="onoffswitch"></td>');
+	var $switchLabel = $('<label class="switch"></label>');
+	var $cbox = $('<input type="checkbox" checked>');
+	var $slider = $('<div class="slider round"></div>');
+	$switchLabel.append($cbox);
+	$switchLabel.append($slider);
+	$td.append($switchLabel);
+	$tr.append($td);
 	$table.append($tr);
 	//setup click event for checkbox
 	//TODO attach even to actual input - currently fireing twice
-	$($input).click(function(){
+	$($slider).click(function(){
 		changeSystemOption(script);
 	});
 }
