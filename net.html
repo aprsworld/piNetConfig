@@ -725,7 +725,7 @@ function build_current_settings(config, data, $ifconfig){
 			$alconfig.append($wifi_table);
 		}
 		for( var alias in data[iface]){
-			if(alias.startsWith("wlan") || alias.startsWith("eth")){
+			if(alias.startsWith("wlan") || alias.startsWith("eth") || alias.startsWith("lo")){
 				$alconfig.append('<h3> '+alias+' Addressing</h3>')
 				var $addressing_table = $('<table border="0"></table>');
 				add_nested_setting(data, [iface, alias,'inet', 'address'], $addressing_table, 'IP Address');
@@ -781,7 +781,7 @@ function update_current_settings(){
 			clearInterval(csTimer.timerID);
 			csTimer.timerID = setInterval(csTimerUpdate, 1000);
 			csTimer.value = 0;
-			$('#currentSettingsTimer').text(''+csTimer.value+' seconds since last update.');
+			$('#currentSettingsTimer').text(''+csTimer.value+' seconds since last update');
 			delete data;
 		},
 		error: function(error) {
@@ -905,7 +905,7 @@ var csTimer = {
 
 function csTimerUpdate(){
 	csTimer.value++;
-	$('#currentSettingsTimer').text(''+csTimer.value+' seconds since last update.');
+	$('#currentSettingsTimer').text(''+csTimer.value+' seconds since last update');
 }
 get_host_name();
 $.ajax("netconfig.php", {
@@ -923,7 +923,7 @@ $.ajax("netconfig.php", {
 	var $currentsettings = $('<div class="interface"></div>');
 	$('#interfaces').append($currentsettings);
 	$currentsettings.attr('id', 'interface-current-settings');
-	$currentsettings.append('<div id="currentSettingsTimer"> '+csTimer.value+' seconds since last update. </div>');
+	$currentsettings.append('<div id="currentSettingsTimer"> '+csTimer.value+' seconds since last update </div>');
 	csTimer.timerID = setInterval(csTimerUpdate, 1000);
 	$currentSettingsAccordion = $('<div id="currentSettingsAccordion"></div>');
 	$currentsettings.append($currentSettingsAccordion);
@@ -934,6 +934,9 @@ $.ajax("netconfig.php", {
 	for (var iface in data) {
 		// Create what will become the tabs for each interface at the top of the screen
 		var iface_type = null;
+		if(iface.startsWith('lo')){
+			continue;
+		}
 		if(iface.startsWith('wlan')){
 			iface_type = "Wireless";
 		}
@@ -1014,6 +1017,7 @@ $.ajax("netconfig.php", {
 			$config_select.val(inet_config.method);
 			$config_select.data('value_orig', inet_config.method);
 			$alconfig.append('<h3> Addressing Options </h3>');
+			$alconfig.append('<label class="drop-down-label" for="">Addressing Method</label>');
 			$alconfig.append($config_select);
 			// create jquery combobox
 			$config_select.selectmenu({
@@ -1051,6 +1055,8 @@ $.ajax("netconfig.php", {
 			$ifconfig_aliases.append($alconfig);
 			$alconfig.find('input, select').data('$alias', $alconfig)
 					.data('$alias_widget', $alias_widget);
+					$config_select.selectmenu( "widget" ).addClass("drop-down");
+
 		}
 
  		$ifconfig_aliases.accordion();
