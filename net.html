@@ -771,6 +771,8 @@ function update_current_settings(){
 		timeout: 5000,
 		retryAfter: 10000,
 		success: function(data, status, XHR) {
+			console.log(_current_settings_items);
+
 			console.log(data);
 			for( var key in _current_settings_items){
 				var res = checkNested(data, _current_settings_items[key]);
