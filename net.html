@@ -197,8 +197,8 @@ input:checked + .slider:before {
 <h1 class="main-h1" style="float: left;">Network Configuration <span id="hostnameheader"> </span></h1>
 
 <div style="float: right;" id="buttons">
-<input id="reset" type="button" name="reset" value="Reset"></input>
-<input id="update" type="button" name="update" value="Update"></input>
+<input id="reset" type="button" name="reset" value="Revert Changes"></input>
+<input id="update" type="button" name="update" value="Apply Changes"></input>
 </div>
 
 <div style="clear: both;" id="interfaces">
@@ -225,7 +225,7 @@ $("#reset").click(function (event) {
 });
 $("#update").click(function (event) {
 	var config = {};
-	$(".interface").not('#interface-current-settings, #interface-system-settings').each(function (index, el) {
+	$(".interface-configurable").not('#interface-current-settings, #interface-system-settings').each(function (index, el) {
 		var iface = $(this).attr('id').substring(10);
 
 		config[iface] = {
@@ -280,7 +280,7 @@ $("#update").click(function (event) {
 	var finalConfig = JSON.stringify({"config":config});
 	console.log(finalConfig);
 	alert(finalConfig);
-	$.ajax({
+	/*$.ajax({
 			url: "netconfig.php",
 			type: 'post',
 			dataType: 'JSON',
@@ -288,12 +288,13 @@ $("#update").click(function (event) {
 			data: finalConfig ,
 			cache: false,
 			success: function(data) {
-				console.log(data);
+				console.log(finalConfig);
+				alert('Configuration successfully saved! System rebooting with new changes.')
 			},
 			error: function (error) {
-				console.log(error);
+				alert(error.responseText);
 			}
-	});
+	});*/
 });
 
 function get_host_name(){
@@ -693,6 +694,122 @@ function build_system_settings1(config, data, $ifconfig){
 	});
 
 }
+
+function build_network_config(config, data, $ifconfig, iface, iface_type, $li){
+
+		$ifconfig.attr('id', 'interface-' + iface);
+		$ifconfig.append('<h2>'+ iface_type+' (' + iface + ')</h2>')
+		$ifconfig_table = $('<table border=0>');
+		// Add global options above the individual ifaces
+		//add_option(config, data, $ifconfig_table, 'hwaddress', 'MAC Address', iface);
+		//add_option(config, data, $ifconfig_table, 'mtu', 'MTU', iface);
+
+		// set each button to "disabled"
+		$ifconfig_table.find('input').button('disable');
+		$ifconfig.append($ifconfig_table);
+		$ifconfig.append('<br />');
+
+		$ifconfig_aliases = $('<div class="config-interface"></div>');
+		$ifconfig.append($ifconfig_aliases);
+		var counter = 0;
+		console.log(data[iface]);
+		if(!iface in data[iface] && iface !== 'lo'){
+			data[iface][iface] = {};
+			data[iface][iface].inet = {}
+			console.log(data[iface]);
+		}
+		// Create an empty alias if the interface has none
+		if (iface in data[iface]){}
+		else{
+			data[iface][iface] = {};
+			data[iface][iface].inet = {};
+			console.log(config);
+			console.log(data[iface]);
+		}
+		for (var alias in data[iface]) {
+			//Exclude weird secondary ip addresses
+			if(alias.endsWith("-secondary")){
+				continue;
+			}
+			console.log(alias);
+			var inet = data[iface][alias].inet;
+			if (!inet) {
+				continue;
+			}
+			counter++;
+			var inet_config;
+			// Default to DHCP if we do not see our iface within the config
+			if (config[alias] == undefined){
+				inet_config = {"method": "dhcp"};
+
+			}
+			else{
+		 		inet_config = config[alias].protocol.inet;
+			}
+			console.log(alias)
+			var $alconfig = $('<div class="alias"></div>');
+			$alconfig.attr('id', 'interface-' + iface + '-' + alias);
+			// create the selection menu that will become our jqueryui combobox
+			var $config_select = $('<select name="method"></select>');
+			if (inet_config.method == "dhcp" || inet_config.method == "static") {
+				$config_select.append('<option value="dhcp">DHCP</option>');
+				$config_select.append('<option value="static">Static</option>');
+			} else {
+				$config_select.append('<option>'+inet_config.method+'</option>');
+			}
+			// set the value of our select menu and keep track of what it was originally
+			$config_select.val(inet_config.method);
+			$config_select.data('value_orig', inet_config.method);
+			$alconfig.append('<h3> Addressing Options </h3>');
+			$alconfig.append('<label class="drop-down-label" for="">Addressing Method</label>');
+			$alconfig.append($config_select);
+			// create jquery combobox
+			$config_select.selectmenu({
+				width: 192,
+				change: function (ev) { //event handler for changing values on select
+					if ($(this).val() == 'static') {
+						$(this).data('$inputs').filter('input[type=checkbox]').button('enable');
+					} else {
+						$(this).data('$inputs').filter('input[type=checkbox]').button('disable');
+					}
+					$(this).data('$inputs').filter('input[type=checkbox]').each(function (ev) {
+						ui_changed($(this).data('$input'));
+					});
+					ui_changed($(this));
+				}
+			});
+			var $alias_table = $('<table border="0"></table>');
+			var $ssid_table = $('<table border="0"></table>');
+			//add_option(config, data, $alias_table, 'hostname', 'Hostname', iface, alias);
+			add_option(config, data, $alias_table, 'address', 'Address', iface, alias);
+			add_option(config, data, $alias_table, 'netmask', 'Netmask', iface, alias);
+			//add_option(config, data, $alias_table, 'pointopoint', 'Point to Point', iface, alias);
+			add_option(config, data, $alias_table, 'gateway', 'Gateway', iface, alias);
+
+			//add_option(config, data, $alias_table, 'metric', 'Metric', iface, alias);
+			//add_option(config, data, $alias_table, 'nameserver', 'Nameserver', iface, alias);
+			$alconfig.append($alias_table);
+			if(iface.startsWith("wlan")){
+				determine_wifi_options(config, data, $ssid_table, iface, alias, $alconfig);
+			}
+			$alconfig.append($ssid_table);
+			$config_select.data('$inputs', $alias_table.find('input'));
+			var $alias_widget = $('<h3>' + alias + '</h3>');
+			$ifconfig_aliases.append($alias_widget);
+			$ifconfig_aliases.append($alconfig);
+			$alconfig.find('input, select').data('$alias', $alconfig)
+					.data('$alias_widget', $alias_widget);
+					$config_select.selectmenu( "widget" ).addClass("drop-down");
+
+		}
+
+ 		$ifconfig_aliases.accordion();
+		$ifconfig.find('input, select').data('$iface', $ifconfig)
+				.data('$iface_widget', $li);
+
+
+}
+
 function build_current_settings(config, data, $ifconfig){
 	for( var iface in data){
 		console.log("---------------------------"+iface+"---------------------------");
@@ -705,7 +822,8 @@ function build_current_settings(config, data, $ifconfig){
 			$iface_widget = $('<h3> Ethernet (' + iface + ') </h3>');
 		}
 		else if(iface.startsWith("lo")){
-			$iface_widget = $('<h3> Loopback (' + iface + ') </h3>');
+			//$iface_widget = $('<h3> Loopback (' + iface + ') </h3>');
+			continue;
 		}
 		$ifaces.append($iface_widget);
 		var $alconfig = $('<div class="alias"></div>');
@@ -723,6 +841,11 @@ function build_current_settings(config, data, $ifconfig){
 			add_nested_setting(data, [iface,'wireless','settings', 'ESSID'], $wifi_table, 'Extended SSID');
 			add_nested_setting(data, [iface,'wireless','settings', 'Signal level'], $wifi_table, 'Signal Level');
 			$alconfig.append($wifi_table);
+		}
+		if(iface in data[iface]){}
+		else{
+			data[iface][iface] = {};
+			data[iface][iface].inet = {};
 		}
 		for( var alias in data[iface]){
 			if(alias.startsWith("wlan") || alias.startsWith("eth") || alias.startsWith("lo")){
@@ -909,6 +1032,7 @@ function csTimerUpdate(){
 	csTimer.value++;
 	$('#currentSettingsTimer').text(''+csTimer.value+' seconds since last update');
 }
+//get the host name
 get_host_name();
 $.ajax("netconfig.php", {
 	context:	this,
@@ -920,8 +1044,10 @@ $.ajax("netconfig.php", {
 	var config = data.config;
 	delete data.config;
 	//checknested test
-	var $li = $('<li><a href="#interface-current-settings">Current Settings</a></li>');
-	$('#interfaces ul').append($li);
+	var $li = $('<li><a href="#interface-current-settings">Network Status</a></li>');
+	$('#interfaces > ul').append($li);
+	var $netConfig = $('<li><a href="#interface-network-configuration">Network Configuration</a></li>');
+	$('#interfaces > ul').append($netConfig);
 	var $currentsettings = $('<div class="interface"></div>');
 	$('#interfaces').append($currentsettings);
 	$currentsettings.attr('id', 'interface-current-settings');
@@ -929,6 +1055,14 @@ $.ajax("netconfig.php", {
 	csTimer.timerID = setInterval(csTimerUpdate, 1000);
 	$currentSettingsAccordion = $('<div id="currentSettingsAccordion"></div>');
 	$currentsettings.append($currentSettingsAccordion);
+
+	var $netConfigSettings = $('<div class="interface"></div>');
+	$netConfigSettings.attr('id', 'interface-network-configuration');
+	$netConfigSettingsTabs = $('<ul></ul>');
+	$netConfigSettings.append($netConfigSettingsTabs);
+	$('#interfaces').append($netConfigSettings);
+
+
 	build_current_settings(config, data, $currentSettingsAccordion);
 	//add_nested_setting(data, ['wlan0', 'wireless', 'type']);
 	//console.log(checkNested(data, ['wlan0', 'wireless', 'type']));
@@ -952,10 +1086,12 @@ $.ajax("netconfig.php", {
 			iface_type = ""
 		}
 		var $li = $('<li><a href="#interface-' + iface + '">' + iface_type+' (' + iface + ')</a></li>');
-		$('#interfaces ul').append($li);
-		var $ifconfig = $('<div class="interface"></div>');
-		$('#interfaces').append($ifconfig);
-		$ifconfig.attr('id', 'interface-' + iface);
+		$('#interfaces > ul').append($li);
+		var $ifconfig = $('<div class="interface interface-configurable"></div>');
+		$('#interface-network-configuration').append($ifconfig);
+		$('#interface-network-configuration > ul').append($li);
+		build_network_config(config, data, $ifconfig, iface, iface_type, $li);
+		/*$ifconfig.attr('id', 'interface-' + iface);
 		$ifconfig.append('<h2>'+ iface_type+' (' + iface + ')</h2>')
 		$ifconfig_table = $('<table border=0>');
 		// Add global options above the individual ifaces
@@ -1063,7 +1199,7 @@ $.ajax("netconfig.php", {
 
  		$ifconfig_aliases.accordion();
 		$ifconfig.find('input, select').data('$iface', $ifconfig)
-				.data('$iface_widget', $li);
+				.data('$iface_widget', $li);*/
 /*
 			$alconfig.html('\
 	<div class="config-alias">\
@@ -1084,7 +1220,7 @@ $.ajax("netconfig.php", {
 */
 	}
 	var $li2 = $('<li><a href="#interface-system-settings">System Settings</a></li>');
-	$('#interfaces ul').append($li2);
+	$('#interfaces > ul').append($li2);
 	var $systemsettings = $('<div class="interface"></div>');
 	$('#interfaces').append($systemsettings);
 	$systemsettings.attr('id', 'interface-system-settings');
@@ -1094,6 +1230,7 @@ $.ajax("netconfig.php", {
 
 
 	$("#interfaces").tabs();
+	$('#interface-network-configuration').tabs();
 	console.log($('#update').attr("disabled"))
 	$('#update').button('enable');
 	setTimeout(update_current_settings, 5000);
