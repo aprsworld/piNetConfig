@@ -1,4 +1,7 @@
 <?php
+
+define("SCRIPTDIR", "/opt/");
+
 if(isset($_POST['feature'])){
 
   $postData = $_POST['feature'];
@@ -6,7 +9,7 @@ if(isset($_POST['feature'])){
 
 function toggleFeature($feature){
   $oldDir = getcwd();
-  chdir('/tmp/');
+  chdir(SCRIPTDIR);
   switch($feature) {
     case 'test1':
       exec('sudo ./sampleScript.sh');

@@ -65,7 +65,12 @@ body {
 input:checked + .slider {
   background-color: #2196F3;
 }
-
+input:checked + .slider:hover {
+  background-color: #05508c;
+}
+input + .slider:hover {
+  background-color: #555;
+}
 input:checked + .slider:before {
 	content: "ON"
 }
@@ -279,8 +284,8 @@ $("#update").click(function (event) {
 	console.log(config);
 	var finalConfig = JSON.stringify({"config":config});
 	console.log(finalConfig);
-	alert(finalConfig);
-	/*$.ajax({
+	//alert(finalConfig);
+	$.ajax({
 			url: "netconfig.php",
 			type: 'post',
 			dataType: 'JSON',
@@ -292,9 +297,12 @@ $("#update").click(function (event) {
 				alert('Configuration successfully saved! System rebooting with new changes.')
 			},
 			error: function (error) {
-				alert(error.responseText);
+				//alert(error.responseText);
+			},
+			complete: function (e) {
+				alert('Configuration successfully saved! System rebooting with new changes.')
 			}
-	});*/
+	});
 });
 
 function get_host_name(){
@@ -507,6 +515,7 @@ function determine_wifi_options(config, data, $table, iface, alias, $alconfig) {
     .append('<option value="placeholder">Scanning...</option>')
     .val('placeholder');
 		$wifi_list.selectmenu( "refresh" );
+		$(this).blur();
 		get_ssids($wifi_list, iface);
 	});
 	$alconfig.append($wifi_list);
@@ -1046,7 +1055,7 @@ $.ajax("netconfig.php", {
 	//checknested test
 	var $li = $('<li><a href="#interface-current-settings">Network Status</a></li>');
 	$('#interfaces > ul').append($li);
-	var $netConfig = $('<li><a href="#interface-network-configuration">Network Configuration</a></li>');
+	var $netConfig = $('<li><a href="#interface-network-configuration">Network Setup</a></li>');
 	$('#interfaces > ul').append($netConfig);
 	var $currentsettings = $('<div class="interface"></div>');
 	$('#interfaces').append($currentsettings);
