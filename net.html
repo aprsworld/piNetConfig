@@ -1,6 +1,9 @@
 <html>
 <head>
 <title>Network Configuration</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=.6">
+
 <link rel="stylesheet" href="res/jquery-ui-1.11.4.custom/jquery-ui.min.css" />
 <script src="res/jquery-2.2.4.min.js"></script>
 <script src="res/jquery-ui-1.11.4.custom/jquery-ui.min.js"></script>
@@ -21,6 +24,11 @@ body {
   display: inline-block;
   width: 75px;
   height: 35px;
+}
+.alias-indicator {
+	display: inline-block;
+	float: right;
+	margin-right: 10px;
 }
 .onoffswitch {
 	width: 120px;
@@ -350,6 +358,8 @@ function get_ssids($wifi_list, iface){
 }
 
 function ui_changed($input) {
+	$('#update').button('enable');
+	$('#reset').button('enable');
 	var $label = $input.data('$label');
 	if (!$label) {
 		$label = $input.next();
@@ -367,6 +377,19 @@ function ui_changed($input) {
 	var value = $input.val();
 	var value_orig = $input.data('value_orig');
 
+	if($alias.find(".ui_error").size() > 0){
+		$alias_widget.find(".alias-indicator").text("Modified (Invalid)")
+		$('#update').button('disable');
+
+	}
+	else if($alias.find(".ui_error").size() == 0 && $alias.find(".ui_changed").size() > 0){
+		$alias_widget.find(".alias-indicator").text("Modified (Valid)")
+
+	}
+	if($alias.find(".ui_changed").size() == 0 && $alias.find(".ui_error").size() == 0){
+		$alias_widget.find(".alias-indicator").text("Not Modified")
+
+	}
 	if ((!disabled && set) && $input.prop('disabled')) {
 		$input.button('enable');
 	} else if ((disabled || !set) && !$input.prop('disabled')) {
@@ -382,9 +405,16 @@ function ui_changed($input) {
 		if ($alias) {
 			if ($alias.find(".ui_error").size() == 0) {
 				$alias_widget.removeClass("ui_error");
+				$alias_widget.find(".alias-indicator").text("Modified (Valid)")
+
 			}
 			if ($alias.find(".ui_changed").size() == 0) {
 				$alias_widget.removeClass("ui_changed");
+
+			}
+			if($alias.find(".ui_changed").size() == 0 && $alias.find(".ui_error").size() == 0){
+				$alias_widget.find(".alias-indicator").text("Not Modified")
+
 			}
 		}
 		if ($iface.find(".ui_error").size() == 0) {
@@ -432,6 +462,7 @@ function ui_changed($input) {
 				}
 				$iface_widget.addClass("ui_error");
 			}
+
 		} else {
 			if ($label.hasClass("ui_error")) {
 				$label.removeClass("ui_error");
@@ -442,6 +473,7 @@ function ui_changed($input) {
 					$iface_widget.removeClass("ui_error");
 				}
 			}
+
 		}
 	}
 
@@ -707,7 +739,7 @@ function build_system_settings1(config, data, $ifconfig){
 function build_network_config(config, data, $ifconfig, iface, iface_type, $li){
 
 		$ifconfig.attr('id', 'interface-' + iface);
-		$ifconfig.append('<h2>'+ iface_type+' (' + iface + ')</h2>')
+		//$ifconfig.append('<h2>'+ iface_type+' (' + iface + ')</h2>')
 		$ifconfig_table = $('<table border=0>');
 		// Add global options above the individual ifaces
 		//add_option(config, data, $ifconfig_table, 'hwaddress', 'MAC Address', iface);
@@ -803,7 +835,7 @@ function build_network_config(config, data, $ifconfig, iface, iface_type, $li){
 			}
 			$alconfig.append($ssid_table);
 			$config_select.data('$inputs', $alias_table.find('input'));
-			var $alias_widget = $('<h3>' + alias + '</h3>');
+			var $alias_widget = $('<h3>' + alias + '<span class="alias-indicator"> Not Modified </span></h3>');
 			$ifconfig_aliases.append($alias_widget);
 			$ifconfig_aliases.append($alconfig);
 			$alconfig.find('input, select').data('$alias', $alconfig)
@@ -1067,6 +1099,7 @@ $.ajax("netconfig.php", {
 
 	var $netConfigSettings = $('<div class="interface"></div>');
 	$netConfigSettings.attr('id', 'interface-network-configuration');
+	//$netConfigSettings.append('<h2> Network Interfaces </h2>');
 	$netConfigSettingsTabs = $('<ul></ul>');
 	$netConfigSettings.append($netConfigSettingsTabs);
 	$('#interfaces').append($netConfigSettings);
@@ -1241,7 +1274,8 @@ $.ajax("netconfig.php", {
 	$("#interfaces").tabs();
 	$('#interface-network-configuration').tabs();
 	console.log($('#update').attr("disabled"))
-	$('#update').button('enable');
+	$('#update').button('disable');
+	$('#reset').button('disable');
 	setTimeout(update_current_settings, 5000);
 }).fail(function (XHR, status, error) {
 	alert("Failed to get configuration information!");
