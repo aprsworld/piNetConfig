@@ -20,9 +20,32 @@ netconfig-read.php handles parsing Debian style 'interface' files.
 
 netconfig-write.php handles writing the JSON "config" block passed in out to a Debain style 'interface' file.
 
+## shExecute.php
+
+This is a small script that is used for changing system settings based on values passed to it. It is configured to interact with shell scripts to actually make the changes
+
+## host-name.php
+
+This is used to grab the host name and pass it back to net.html
+
 ## net.html
 
 net.html is an HTML and JavaScript Web Interface to use to get current configuration and settings and then to update them.
+
+Web interface currently consists of three tabs:
+
+  * Network Status Tab
+
+    This tab consists of all current network settings on the device. Each interface shows up in an accordion view and consists of (when applicable) interface settings, wifi settings, and inet settings. All of the values in this tab are updated every five seconds.
+
+  * Network Setup Tab
+
+    This tab consists of network settings that are able to be configured. When settings are changed, they are validated on the fly. Wifi scanning is also an option within the wireless interfaces.
+
+  * System Settings
+
+    This section consists of system options that can be enabled or disabled.
+
 
 ## JSON Format
 
@@ -113,4 +136,3 @@ For WEP wireless encryption the 'wireless-tools' are used and documentation is a
 ```
 
 Where 'wireless-essid' is the wireless network name and 'wireless-key1' is the hexidecimal key for WEP.  You can replace 1 with 2, 3, or 4 to enter those keys if desired.
-
