@@ -48,7 +48,6 @@ body {
 
 .slider {
 	border: 1px solid #ccc;
-
 	text-align: left !important;
   position: absolute;
   cursor: pointer;
@@ -921,9 +920,22 @@ function build_network_config(config, data, $ifconfig, iface, iface_type, $li){
 				width: 192,
 				change: function (ev) { //event handler for changing values on select
 					if ($(this).val() == 'static') {
-						$(this).data('$inputs').filter('input[type=checkbox]').button('enable');
+						$(this).data('$inputs').filter('input[type=checkbox]').each(function(){
+							$(this).prop('checked', false);
+							$(this).button('enable');
+						});
+						$(this).data('$inputs').filter('input[type=text]').each(function(){
+							//Set to the original value
+							$(this).val($(this).data("value_orig"));
+						});
 					} else {
-						$(this).data('$inputs').filter('input[type=checkbox]').button('disable');
+						$(this).data('$inputs').filter('input[type=checkbox]').each(function(){
+							$(this).prop('checked', true);
+							$(this).button('disable');
+						});
+						$(this).data('$inputs').filter('input[type=text]').each(function(){
+							$(this).val("Automatically Determined");
+						});
 					}
 					$(this).data('$inputs').filter('input[type=checkbox]').each(function (ev) {
 						ui_changed($(this).data('$input'));
@@ -1128,6 +1140,9 @@ function add_option(config, data, $table, option, title, iface, alias) {
 	$checkbox.data('$input', $input);
 	console.log(config_value);
 	$input.data('value_orig', value);
+	if(config[alias].protocol.inet.method == 'dhcp'){
+			$input.val('Automatically Determined');
+	}
 	$input.data('$label', $label);
 	$input.data('$checkbox', $checkbox);
 	$input.button().addClass('ui-textfield').off('mouseenter').off('mousedown').off('keydown').bind('propertychange change keyup click keyup input paste', function(ev) {
