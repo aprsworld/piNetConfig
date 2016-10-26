@@ -25,6 +25,10 @@ body {
   -webkit-transform: scale(.75); /* Chrome, Safari, Opera */
   transform: scale(.75);
 }
+.ui-dialog-titlebar{
+		background-color: rgb(0, 127, 255);
+		color: white;
+}
 .ui-dialog{
 	box-shadow: 0px 0px 20px #555;
 }
@@ -245,16 +249,18 @@ input:checked + .slider:before {
 //and: http://blmrgnn.blogspot.com/2014/01/linux-ifconfig-command-output-explained.html
 //and: https://www.infradead.org/~tgr/libnl/doc/route.html
 var _toolTipLookUp = {
-	"address": "Description: IP address is a unique identifier for your device. This address is granted by a router, or it is set statically by the user.",
+	"address": "Description: IP address is a unique identifier for your device on a network. This address is granted by a router, or it is set statically by the user.",
 	"netmask": "Description: The network mask is a 32-bit mask used to divide an IP address into subnets and specify the network's available hosts",
 	"gateway": "Description: The gateway typically refers to the internet gateway, which connects a network to the outside internet",
 	"brd": "Description: The Broadcast Address is a special network address that is used for broadcasting messages to all devices on a network.",
 	"broadcast": "Description: The Broadcast Address is a special network address that is used for broadcasting messages to all devices on a network.",
 	"mode": "Description: Mode Type refers to the conditions that must be met for an interface to transition to 'up.' Potenential values include 'DEFAULT,' which requires only a link to be detected, and 'DORMANT' which has additional MLAG requirements.",
-	"state": "Description: State indicates that the network interface is configured to be enabled",
-	"mtu": "Description: The MTU or Max Transmission Unit designates the maximum size of the Frame that contains a data packet",
-	"ESSID": "Description: The ESSID or Extended Service Set Identification is an identifier for a wireless network",
-	"Signal level": "Description: Signal Level is a metric that is used to describe the strength of a wireless signal"
+	"state": "Description: State indicates that the network interface is configured to be enabled. 'UP' denotes an interface that is enabled whereas 'DOWN' indicates that interface is disabled or not working correctly.",
+	"mtu": "Description: The MTU or Max Transmission Unit designates the maximum size of the Frame that contains a data packet.",
+	"ESSID": "Description: The ESSID or Extended Service Set Identification is an identifier for a wireless network.",
+	"Signal level": "Description: Signal Level is a metric that is used to describe the strength of a wireless signal. The closer the value is to zero, the better the signal.",
+	"method": "Description: Addressing Method determines whether Address, Netmask, and Gateway are determined by the router (DHCP), or set statically (Static).",
+	"security": "Description: Security Type is what the router's encryption is configured as. This can be None, WEP, WPA, WPA2. None is the least secure, whereas WPA2 is the most secure."
 }
 
 //Set up jQuery tooltips
@@ -345,7 +351,7 @@ $( function() {
 				console.log(config);
 				var finalConfig = JSON.stringify({"config":config});
 				console.log(finalConfig);
-				//alert(finalConfig);
+				alert(finalConfig);
 				/*$.ajax({
 						url: "netconfig.php",
 						type: 'post',
@@ -445,8 +451,8 @@ function get_ssids($wifi_list, iface){
 }
 
 function ui_changed($input) {
-	$('#update').button('enable');
-	$('#reset').button('enable');
+	//$('#update').button('enable');
+	//$('#reset').button('enable');
 	var $label = $input.data('$label');
 	if (!$label) {
 		$label = $input.next();
@@ -467,15 +473,13 @@ function ui_changed($input) {
 	if($alias.find(".ui_error").size() > 0){
 		$alias_widget.find(".alias-indicator").text("Modified (Invalid)")
 		$('#update').button('disable');
-
 	}
 	else if($alias.find(".ui_error").size() == 0 && $alias.find(".ui_changed").size() > 0){
 		$alias_widget.find(".alias-indicator").text("Modified (Valid)")
-
+		$('#update').button('enable');
 	}
 	if($alias.find(".ui_changed").size() == 0 && $alias.find(".ui_error").size() == 0){
 		$alias_widget.find(".alias-indicator").text("Not Modified")
-
 	}
 	if ((!disabled && set) && $input.prop('disabled')) {
 		$input.button('enable');
@@ -501,7 +505,8 @@ function ui_changed($input) {
 			}
 			if($alias.find(".ui_changed").size() == 0 && $alias.find(".ui_error").size() == 0){
 				$alias_widget.find(".alias-indicator").text("Not Modified")
-
+				$('#update').button('disable');
+				$('#reset').button('disable');
 			}
 		}
 		if ($iface.find(".ui_error").size() == 0) {
@@ -568,6 +573,13 @@ function ui_changed($input) {
 		return;
 	}
 	$label.addClass("ui_changed");
+	$alias_widget.find(".alias-indicator").text("Modified (Valid)")
+
+	$('#update').button('enable');
+	$('#reset').button('enable');
+	if(		$alias.find(".ui_error").size() > 0){
+		$('#update').button('disable');
+	}
 	if ($alias) {
 		$alias_widget.addClass("ui_changed");
 		console.log($alias);
@@ -613,7 +625,7 @@ function determine_wifi_options(config, data, $table, iface, alias, $alconfig) {
 	$config_select.data('value_orig', securityType);
 
 	var $wifi_list = $('<select id="'+iface+'-'+alias+'-wifi_list" name="wifi_list"></select>');
-	var $scan_button = $('<input id="'+iface+'-'+alias+'-wifi_scan" type="button" name="'+iface+'-'+alias+'-wifi_scan" value="Scan for Wifi"></input>');
+	var $scan_button = $('<input id="'+iface+'-'+alias+'-wifi_scan" type="button" name="'+iface+'-'+alias+'-wifi_scan" title="Click to scan for Wifi SSIDs" value="Scan for Wifi"></input>');
 	$wifi_list.append('<option value="placeholder">Scanning...</option>');
 	$scan_button.addClass('wifi-scan-button')
 	$('#wlan0-wlan0-wifi_scan').button("disable");
@@ -621,7 +633,9 @@ function determine_wifi_options(config, data, $table, iface, alias, $alconfig) {
 	get_ssids($wifi_list, iface);
 
 	$alconfig.append('<h3> Security Options </h3>');
-	$alconfig.append('<label class="drop-down-label" for="">Security Type</label>');
+	var tooltip = _toolTipLookUp["security"];
+
+	$alconfig.append('<label class="drop-down-label" for="">Security Type<span title="'+tooltip+'" class="help-q ui-icon ui-icon-help"></label>');
 	$alconfig.append($config_select);
 	$alconfig.append('<br>');
 	$alconfig.append($scan_button);
@@ -913,7 +927,9 @@ function build_network_config(config, data, $ifconfig, iface, iface_type, $li){
 			$config_select.val(inet_config.method);
 			$config_select.data('value_orig', inet_config.method);
 			$alconfig.append('<h3> Addressing Options </h3>');
-			$alconfig.append('<label class="drop-down-label" for="">Addressing Method</label>');
+			var tooltip = _toolTipLookUp["method"];
+
+			$alconfig.append('<label class="drop-down-label" for="">Addressing Method<span title="'+tooltip+'" class="help-q ui-icon ui-icon-help help-q"></label>');
 			$alconfig.append($config_select);
 			// create jquery combobox
 			$config_select.selectmenu({
@@ -921,7 +937,6 @@ function build_network_config(config, data, $ifconfig, iface, iface_type, $li){
 				change: function (ev) { //event handler for changing values on select
 					if ($(this).val() == 'static') {
 						$(this).data('$inputs').filter('input[type=checkbox]').each(function(){
-							$(this).prop('checked', false);
 							$(this).button('enable');
 						});
 						$(this).data('$inputs').filter('input[type=text]').each(function(){
@@ -930,7 +945,6 @@ function build_network_config(config, data, $ifconfig, iface, iface_type, $li){
 						});
 					} else {
 						$(this).data('$inputs').filter('input[type=checkbox]').each(function(){
-							$(this).prop('checked', true);
 							$(this).button('disable');
 						});
 						$(this).data('$inputs').filter('input[type=text]').each(function(){
@@ -1119,7 +1133,7 @@ function add_option(config, data, $table, option, title, iface, alias) {
 	} else if (config[iface]) {
 		config_value = config[iface][option];
 	}
-	var checked = (config_value) ? " checked" : "";
+	var checked = (config_value) || option == 'address' || option == 'netmask' || option == 'gateway' ? " checked" : "";
 	var disabled = (config_value) ? "" : " disabled";
 	var value = (config_value) ? config_value : (alias) ? data[iface][alias].inet[option] : data[iface][option];
 	if (value === null || value == undefined) {
