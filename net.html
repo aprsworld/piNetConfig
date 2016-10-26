@@ -18,6 +18,16 @@ body {
 #currentsettingstimer{
 	text-align: right;
 }
+.help-q{
+	display: inline-block;
+	cursor: help;
+	-ms-transform: scale(.75); /* IE 9 */
+  -webkit-transform: scale(.75); /* Chrome, Safari, Opera */
+  transform: scale(.75);
+}
+.ui-dialog{
+	box-shadow: 0px 0px 20px #555;
+}
 /* Switch code found at http://www.w3schools.com/howto/tryit.asp?filename=tryhow_css_switch*/
 .switch {
   position: relative;
@@ -214,7 +224,12 @@ input:checked + .slider:before {
 
 <body>
 <h1 class="main-h1" style="float: left;">Network Configuration <span id="hostnameheader"> </span></h1>
-
+<div id="dialog-confirm" title="Apply changes and reboot?">
+  <p><span class="ui-icon ui-icon-alert" style="float:left; margin:12px 12px 20px 0;"></span>The changes that you have made will be applied and the system will reboot. Are you sure?</p>
+</div>
+<div id="revert-confirm" title="Discard changes and reload page?">
+  <p><span class="ui-icon ui-icon-alert" style="float:left; margin:12px 12px 20px 0;"></span>The changes that you have made will be lost and this page will reload. Are you sure?</p>
+</div>
 <div style="float: right;" id="buttons">
 <input id="reset" type="button" name="reset" value="Revert Changes"></input>
 <input id="update" type="button" name="update" value="Apply Changes"></input>
@@ -225,6 +240,139 @@ input:checked + .slider:before {
 </div>
 
 <script>
+
+//Descriptions of all networking options.
+//src: http://www.aboutlinux.info/2006/11/ifconfig-dissected-and-demystified.html
+//and: http://blmrgnn.blogspot.com/2014/01/linux-ifconfig-command-output-explained.html
+//and: https://www.infradead.org/~tgr/libnl/doc/route.html
+var _toolTipLookUp = {
+	"address": "Description: IP address is a unique identifier for your device. This address is granted by a router, or it is set statically by the user.",
+	"netmask": "Description: The network mask is a 32-bit mask used to divide an IP address into subnets and specify the network's available hosts",
+	"gateway": "Description: The gateway typically refers to the internet gateway, which connects a network to the outside internet",
+	"brd": "Description: The Broadcast Address is a special network address that is used for broadcasting messages to all devices on a network.",
+	"broadcast": "Description: The Broadcast Address is a special network address that is used for broadcasting messages to all devices on a network.",
+	"mode": "Description: Mode Type refers to the conditions that must be met for an interface to transition to 'up.' Potenential values include 'DEFAULT,' which requires only a link to be detected, and 'DORMANT' which has additional MLAG requirements.",
+	"state": "Description: State indicates that the network interface is configured to be enabled",
+	"mtu": "Description: The MTU or Max Transmission Unit designates the maximum size of the Frame that contains a data packet",
+	"ESSID": "Description: The ESSID or Extended Service Set Identification is an identifier for a wireless network",
+	"Signal level": "Description: Signal Level is a metric that is used to describe the strength of a wireless signal"
+}
+
+//Set up jQuery tooltips
+$( function() {
+	$( document ).tooltip();
+} );
+//setup confirmation dialogs
+$( function() {
+	$( "#revert-confirm" ).dialog({
+		resizable: false,
+		height: "auto",
+		width: 400,
+		modal: true,
+		autoOpen: false,
+		buttons: {
+			"Revert Changes": function() {
+				$( this ).dialog( "close" );
+				location.reload();
+			},
+			"Cancel": function() {
+				$( this ).dialog( "close" );
+
+			}
+		}
+	});
+	$( "#dialog-confirm" ).dialog({
+		resizable: false,
+		height: "auto",
+		width: 400,
+		modal: true,
+		autoOpen: false,
+		buttons: {
+			"Apply Changes": function() {
+				$( this ).dialog( "close" );
+				var config = {};
+
+				$(".interface-configurable").not('#interface-current-settings, #interface-system-settings').each(function (index, el) {
+					var iface = $(this).attr('id').substring(10);
+
+					config[iface] = {
+						mtu: $(this).find('input[name="mtu"]').first().val()
+					};
+					$(this).find('.alias').each(function (index, el) {
+						var alias = $(this).attr('id').substring(iface.length + 11);
+						if (alias != iface) {
+							config[alias] = {};
+						}
+						if(iface.startsWith("wlan")){
+							config[alias].allow = ["hotplug", "auto"];
+						}
+						else{
+							config[alias].allow = "auto";
+						}
+						config[alias].protocol = {};
+						config[alias].protocol.inet = {};
+
+						var method = $(this).find('.ui-selectmenu-button:first').children('.ui-selectmenu-text').text().toLowerCase();
+						if(method != undefined){
+							config[alias].protocol.inet["method"] = method;
+						}
+						$(this).find('input[type=text]').each(function (index, el) {
+							if ($(this).prop('disabled')) {
+								return;
+							}
+							var option = $(this).prop('name');
+							var value = $(this).val();
+							if (value.trim() == "" || value == "undefined") {
+								return;
+							}
+							// add quotes around wpa-psk value because config requries this
+							if ($(this).attr('name') == 'wpa-psk'){
+								value = "\""+value+"\"";
+								config[alias].protocol.inet["wpa-ap-scan"] = "1";
+								config[alias].protocol.inet["wpa-scan-ssid"] = "1";
+							}
+							if (config[alias].protocol.inet[option] != undefined) {
+								if ($.isArray(config[alias].inet[option])) {
+									config[alias].protocol.inet[option].push(value);
+								} else {
+									config[alias].protocol.inet[option] = [ config[alias].protocol.inet[option], value ];
+								}
+							} else {
+								config[alias].protocol.inet[option] = value;
+							}
+						});
+					});
+				});
+				console.log(config);
+				var finalConfig = JSON.stringify({"config":config});
+				console.log(finalConfig);
+				//alert(finalConfig);
+				/*$.ajax({
+						url: "netconfig.php",
+						type: 'post',
+						dataType: 'JSON',
+						contentType: 'application/json',
+						data: finalConfig ,
+						cache: false,
+						success: function(data) {
+							console.log(finalConfig);
+							alert('Configuration successfully saved! System rebooting with new changes.')
+						},
+						error: function (error) {
+							//alert(error.responseText);
+						},
+						complete: function (e) {
+							alert('Configuration successfully saved! System rebooting with new changes.')
+						}
+				});*/
+			},
+			Cancel: function() {
+				$( this ).dialog( "close" );
+			}
+		}
+	});
+} );
+
 if (!String.prototype.startsWith) {
 	String.prototype.startsWith = function(searchString, position) {
 		position = position || 0;
@@ -240,83 +388,11 @@ var _current_settings_items = {};
 $("#update").prop('disabled', true);
 $("input:button").button();
 $("#reset").click(function (event) {
-	location.reload();
+	$( "#revert-confirm" ).dialog("open");
+
 });
 $("#update").click(function (event) {
-	var config = {};
-	$(".interface-configurable").not('#interface-current-settings, #interface-system-settings').each(function (index, el) {
-		var iface = $(this).attr('id').substring(10);
-
-		config[iface] = {
-			mtu: $(this).find('input[name="mtu"]').first().val()
-		};
-		$(this).find('.alias').each(function (index, el) {
-			var alias = $(this).attr('id').substring(iface.length + 11);
-			if (alias != iface) {
-				config[alias] = {};
-			}
-			if(iface.startsWith("wlan")){
-				config[alias].allow = ["hotplug", "auto"];
-			}
-			else{
-				config[alias].allow = "auto";
-			}
-			config[alias].protocol = {};
-			config[alias].protocol.inet = {};
-
-			var method = $(this).find('.ui-selectmenu-button:first').children('.ui-selectmenu-text').text().toLowerCase();
-			if(method != undefined){
-				config[alias].protocol.inet["method"] = method;
-			}
-			$(this).find('input[type=text]').each(function (index, el) {
-				if ($(this).prop('disabled')) {
-					return;
-				}
-				var option = $(this).prop('name');
-				var value = $(this).val();
-				if (value.trim() == "" || value == "undefined") {
-					return;
-				}
-				// add quotes around wpa-psk value because config requries this
-				if ($(this).attr('name') == 'wpa-psk'){
-					value = "\""+value+"\"";
-					config[alias].protocol.inet["wpa-ap-scan"] = "1";
-					config[alias].protocol.inet["wpa-scan-ssid"] = "1";
-				}
-				if (config[alias].protocol.inet[option] != undefined) {
-					if ($.isArray(config[alias].inet[option])) {
-						config[alias].protocol.inet[option].push(value);
-					} else {
-						config[alias].protocol.inet[option] = [ config[alias].protocol.inet[option], value ];
-					}
-				} else {
-					config[alias].protocol.inet[option] = value;
-				}
-			});
-		});
-	});
-	console.log(config);
-	var finalConfig = JSON.stringify({"config":config});
-	console.log(finalConfig);
-	alert(finalConfig);
-	/*$.ajax({
-			url: "netconfig.php",
-			type: 'post',
-			dataType: 'JSON',
-			contentType: 'application/json',
-			data: finalConfig ,
-			cache: false,
-			success: function(data) {
-				console.log(finalConfig);
-				alert('Configuration successfully saved! System rebooting with new changes.')
-			},
-			error: function (error) {
-				//alert(error.responseText);
-			},
-			complete: function (e) {
-				alert('Configuration successfully saved! System rebooting with new changes.')
-			}
-	});*/
+	$( "#dialog-confirm" ).dialog("open");
 });
 
 function get_host_name(){
@@ -908,9 +984,9 @@ function build_current_settings(config, data, $ifconfig){
 		$alconfig.append('<h3>Interface Settings</h3>')
 		//$alconfig.attr('id', 'interface-' + iface + '-' + alias);
 		var $globals_table = $('<table border="0"></table>');
-		add_nested_setting(data, [iface, 'state'], $globals_table, "Link State");
+		add_nested_setting(data, [iface, 'state'], $globals_table, "State");
 		add_nested_setting(data, [iface, 'mtu'], $globals_table, 'Max Transmission Unit');
-		add_nested_setting(data, [iface, 'mode'], $globals_table, 'Mode');
+		add_nested_setting(data, [iface, 'mode'], $globals_table, 'Mode Type');
 		$alconfig.append($globals_table);
 		if(iface.startsWith("wlan")){
 			$alconfig.append('<h3>Wifi Settings</h3>')
@@ -945,15 +1021,24 @@ function add_nested_setting(data, pathArr, $table, title){
 	var checked = checkNested(data, pathArr);
 	if(checked.found){
 		var $tr = $('<tr class="current-settings-tr">');
-		var $label = $('<label class="current-settings-label">'+title+'</label>');
 		var option_id = 'currentsettings_'+pathArr.join('-').replace(' ', '');
 		var available = false;
-		var option = pathArr[pathArr.length];
+		var option = pathArr[pathArr.length-1];
 		var value = checked.result;
+		var tooltip = _toolTipLookUp[option];
+		if(typeof(tooltip) == "undefined"){
+			alert(option);
+			tooltip = option;
+		}
+		var $label = $('<label class="current-settings-label">'+title+'<span title="'+tooltip+'" class="help-q ui-icon ui-icon-help help-q"> </span></label>');
+
 		var $th = $('<th class="current-settings-th"></th>').append($label);
+		//reference our object that holds descriptions
+
 		$tr.append($th);
 		var $input = $('<span id="'+option_id+'" name="'+option+'">'+value+' </span>');
 		var $td = $('<td></td>').append($input);
+		//$($td).append("<span title="'+tooltip+'" class="help-q"> ? </span>");
 		_current_settings_items[option_id] = pathArr;
 		console.log(_current_settings_items);
 		$tr.append($td);
