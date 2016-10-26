@@ -770,7 +770,7 @@ function checkNested(obj, pathArr) {
     }
     obj = obj[pathArr[i]];
   }
-  return {found:true, result:obj};
+  return {found:true, result:obj.replace("off/any","")};
 }
 function changeSystemOption(feature){
 	$.ajax("shExecute.php", {
