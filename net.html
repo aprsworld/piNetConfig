@@ -154,11 +154,12 @@ input:checked + .slider:before {
 .ui-button:not(.ui-state-disabled, .ui-textfield):hover{
     border: 1px solid #333 !important;
 }
-.wifi-scan-button{
-	box-shadow: 0 3px 5px 0px #aaa;
+.wifi-scan-button, #buttons>input{
+	box-shadow: 0 3px 3px 0px #aaa;
 }
-.wifi-scan-button:hover{
-	box-shadow: inset 0 1px 3px 0px #aaa;
+.wifi-scan-button:hover, #buttons>input:not(:disabled):hover{
+	box-shadow: inset 0 1px 1px 0px #aaa;
+	color: #555;
 }
 .wifi-scan-button, .wifi-scan-list, .drop-down-label, .drop-down{
 	vertical-align: middle;
