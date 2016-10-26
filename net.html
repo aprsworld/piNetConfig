@@ -158,7 +158,12 @@ input:checked + .slider:before {
 	box-shadow: 0 3px 3px 0px #aaa;
 }
 .wifi-scan-button:hover, #buttons>input:not(:disabled):hover{
-	box-shadow: inset 0 1px 1px 0px #aaa;
+	box-shadow: none;
+}
+.wifi-scan-button:active, #buttons>input:not(:disabled):active{
+	box-shadow: inset 0 2px 3px 0px #aaa;
+	background-color: rgb(246, 246, 246);
+	border: 1px solid rgb(197, 197, 197);
 	color: #555;
 }
 .wifi-scan-button, .wifi-scan-list, .drop-down-label, .drop-down{
@@ -278,10 +283,13 @@ $( function() {
 		autoOpen: false,
 		buttons: {
 			"Revert Changes": function() {
+				$('body').focus();
 				$( this ).dialog( "close" );
 				location.reload();
 			},
 			"Cancel": function() {
+				$('body').focus();
+
 				$( this ).dialog( "close" );
 
 			}
@@ -295,6 +303,8 @@ $( function() {
 		autoOpen: false,
 		buttons: {
 			"Apply Changes": function() {
+				$('body').focus();
+
 				$( this ).dialog( "close" );
 				var config = {};
 
@@ -373,6 +383,8 @@ $( function() {
 				});*/
 			},
 			Cancel: function() {
+				$('body').focus();
+
 				$( this ).dialog( "close" );
 			}
 		}
