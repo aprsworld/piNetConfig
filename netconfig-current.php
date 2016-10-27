@@ -7,7 +7,7 @@ function iwconfig_parse($s) {
 	$ret = Array();
 
 	// Parse each interface
-	foreach ($interfaces_string as $interface_string) { 
+	foreach ($interfaces_string as $interface_string) {
 		// Empty interface
 		if (trim($interface_string) == "") {
 			continue;
@@ -130,7 +130,7 @@ function ip_parse_address($s) {
 	$ret = Array();
 
 	// Parse each interface
-	foreach ($interfaces_string as $interface_string) { 
+	foreach ($interfaces_string as $interface_string) {
 		// Empty interface
 		if (trim($interface_string) == "") {
 			continue;
@@ -152,7 +152,7 @@ function ip_parse_address($s) {
 			$alias = $interface;
 		}
 		if ($split0[sizeof($split0)-2] == "secondary") {
-			$alias = $alias . '-secondary'; // XXX: Cludge
+			//$alias = $alias . '-secondary'; // XXX: Cludge
 		}
 		$family = $split0[1];
 		$net = split("/", $split0[2], 2);

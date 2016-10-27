@@ -918,7 +918,7 @@ function build_network_config(config, data, $ifconfig, iface, iface_type, $li){
 			counter++;
 			var inet_config;
 			// Default to DHCP if we do not see our iface within the config
-			if (config[alias] == undefined){
+			if (typeof(config[alias]) == undefined){
 				inet_config = {"method": "dhcp"};
 
 			}
@@ -1058,7 +1058,6 @@ function build_current_settings(config, data, $ifconfig){
 
 function add_nested_setting(data, pathArr, $table, title){
 	var checked = checkNested(data, pathArr);
-
 		var $tr = $('<tr class="current-settings-tr">');
 		var option_id = 'currentsettings_'+pathArr.join('-').replace(' ', '');
 		var available = false;
