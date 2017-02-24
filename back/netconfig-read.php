@@ -57,7 +57,7 @@ function interfaces_read($filename) {
 
 		// Source
 		if (preg_match("/^source(-directory)?[\s]+([^\s]+)$/", $clean_line, $matches)) {
-			print "BOOM!";
+// WTF			print "BOOM!";
 			if ($matches[1]) {
 				config_add($config, NULL, NULL, "source-directory", $matches[2]);
 			} else {
