@@ -80,6 +80,10 @@ $("#update").click(function (event) {
 				config[alias] = {};
 			}
 			config[alias].inet = {};
+			var method = $(this).find('.ui-selectmenu-button').children('.ui-selectmenu-text').text().toLowerCase();
+			if(method != undefined){
+				config[alias].inet["method"] = method;
+			}
 			$(this).find('input[type=text]').each(function (index, el) {
 				if ($(this).prop('disabled')) {
 					return;
@@ -101,7 +105,24 @@ $("#update").click(function (event) {
 			});
 		});
 	});
-	alert(JSON.stringify(config));
+	console.log(config);
+	var finalConfig = JSON.stringify({"config": config});
+	console.log(finalConfig);
+	alert(finalConfig);
+	/*$.ajax({	
+			url: "netconfig.php",
+			type: 'post',
+			dataType: 'JSON',
+			contentType: 'application/json',
+			data: finalConfig ,
+			cache: false,
+			success: function(data) {
+				console.log(data);
+			},
+			error: function (error) {
+				console.log("error");
+			}
+	});*/
 });
 
 function ui_changed($input) {
